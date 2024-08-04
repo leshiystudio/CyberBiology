@@ -1,10 +1,12 @@
-import pyscreenshot
+#модули
 import buttons
 import pygame_widgets
 from random import randint as rand
 import bot
 import pygame
 pygame.init()
+
+#НАСТРОЙКА
 
 keep_going = True
 pause = [False]
@@ -25,7 +27,6 @@ world_scale = [
     int((W - 300) / 10),
     int(H / 10)
     ]
-#world_scale = [60, 60]
 world = [["none" for y in range(world_scale[1])]for x in range(world_scale[0])]
 draw_type = [0]
 font = pygame.font.SysFont(None, 24)
@@ -34,6 +35,8 @@ timer = pygame.time.Clock()
 selection = None
 input_name = None
 save_button = None
+
+#ОСНОВНОЕ
 
 def render_text(text, pos, color=(0, 0, 0), size=24, centerx=False, centery=False):
     font = pygame.font.SysFont(None, size)
@@ -49,7 +52,7 @@ def render_text(text, pos, color=(0, 0, 0), size=24, centerx=False, centery=Fals
         text_rect.y = pos[1]
     screen.blit(text_img, text_rect)
 
-def draw_brain(brain):
+def draw_brain(brain):#отрисовка мозга
     pygame.draw.rect(screen, grey, (0, 0, 360, 360))
     for x in range(64):
         pos2 = [x % 8, x // 8]
@@ -57,14 +60,14 @@ def draw_brain(brain):
         pygame.draw.rect(screen, (128, 128, 128), (pos[0], pos[1], 40, 40))
         render_text(str(brain[x]), (pos[0] + 20, pos[1] + 20), centerx=True, centery=True)
 
-def mouse_function():
+def mouse_function():#обработка нажатий мыши
     global selection
     mousepos = pygame.mouse.get_pos()
-    botpos = [
+    botpos = [#позиция объекта, на котонрый нажали
         int(mousepos[0] / 10),
         int(mousepos[1] / 10)
         ]
-    if mouse[0] == "select":
+    if mouse[0] == "select":#выбрать бота
         if botpos[0] < world_scale[0]:
             for u in objects:
                 if u.name == "bot":
@@ -79,14 +82,14 @@ def mouse_function():
                 else:
                     buttons.remove_bot_buttons()
                     selection = None
-    elif mouse[0] == "remove":
+    elif mouse[0] == "remove":#удалить объект(и бота, и органику)
         if botpos[0] < world_scale[0]:
             for u in objects:
                 if u.pos == botpos:
                     u.kill()
                     break
             world[botpos[0]][botpos[1]] = "none"
-    elif mouse[0] == "set":
+    elif mouse[0] == "set":#установить загруженного бота
         if botpos[0] < world_scale[0]:
             if botcode[0] != None:
                 if world[botpos[0]][botpos[1]] == "none":
@@ -95,28 +98,31 @@ def mouse_function():
                     objects.add(new_bot)
                     world[botpos[0]][botpos[1]] = "bot"
 
-screen.fill(white)
 steps = 0
 steps2 = 0
-while keep_going:
+mousedown = 0
+
+while keep_going:#основной цикл
     steps2 += 1
     steps2 %= 60
     events = pygame.event.get()
     for event in events:
         if event.type == pygame.QUIT:
             keep_going = False
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_function()
-        if event.type == pygame.KEYDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN:#нажатия мыши
+            mousedown = 1
+        if event.type == pygame.MOUSEBUTTONUP:
+            mousedown = 0
+        if event.type == pygame.KEYDOWN:#обработка нажатий клавиш
             if event.key == pygame.K_ESCAPE:
                 keep_going = False
-            if event.key == pygame.K_1:
+            if event.key == pygame.K_F1:#создать новую популяцию
                 steps = 0
                 for i in objects:
                     i.kill()
                     world[i.pos[0]][i.pos[1]] = "none"
                 for x in range(1000):
-                    while True:
+                    while True:#перебирать ботов, пока на клетке, на которой он должен появиться, не окажется пустота
                         color = (
                             rand(0, 255),
                             rand(0, 255),
@@ -130,14 +136,22 @@ while keep_going:
                             objects.add(bot.Bot(pos, color, world, objects, bots))
                             world[pos[0]][pos[1]] = "bot"
                             break
+            if event.key == pygame.K_F2:
+                steps = 0
+                for i in objects:
+                    i.kill()
+                    world[i.pos[0]][i.pos[1]] = "none"
     if not pause[0]:
         steps += 1
         bots[0] = 0
-        objects.update(draw_type[0])
+        objects.update(draw_type[0])#обновить всех ботов
+    if mousedown:
+        mouse_function()#обработка нажатий мыши
     screen.fill(grey)
     pygame.draw.rect(screen, white, (0, 0, world_scale[0] * 10, world_scale[1] * 10))
-    objects.draw(screen)
+    objects.draw(screen)#установить/уничтожить/выделить
     pygame_widgets.update(events)
+    #рисование текста
     if draw_type[0] == 0:
         txt = "Bot color view"
     elif draw_type[0] == 1:
@@ -160,10 +174,10 @@ while keep_going:
     if selection == None:
         render_brain[0] = False
         render_text("None", (W - 300, 420))
-    else:
+    else:#если выбран бот, вывести на экран информацию о нем
         if render_brain[0]:
             draw_brain(selection.commands)
-        if int(steps2 // 30) % 2:
+        if int(steps2 // 30) % 2:#мигающее красное выделение
             pygame.draw.rect(screen, (255, 0, 0), selection.rect)
         render_text("Energy: " + str(selection.energy), (W - 300, 420))
         render_text("Minerals: " + str(selection.minerals), (W - 300, 440))
@@ -173,27 +187,5 @@ while keep_going:
             buttons.remove_bot_buttons()
             selection = None
     pygame.display.update()
-    if steps % 25 == -1:
-        for x in range(5):
-            draw_type[0] += 1
-            draw_type[0] %= 5
-            pygame.draw.rect(screen, white, (0, 0, W - 300, H))
-            for i in objects:
-                if i.name == "bot":
-                    i.change_image(draw_type[0])
-            objects.draw(screen)
-            pygame.display.update()
-            image = pyscreenshot.grab()
-            if draw_type[0] == 0:
-                txt = "color"
-            elif draw_type[0] == 1:
-                txt = "energy"
-            elif draw_type[0] == 2:
-                txt = "minerals"
-            elif draw_type[0] == 3:
-                txt = "age"
-            else:
-                txt = "predators"
-            image.save(f"record/{txt}/screen{steps // 25}.png")
     timer.tick(240)
 pygame.quit()
