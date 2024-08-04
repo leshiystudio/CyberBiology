@@ -13,6 +13,9 @@ save_button = None
 show_brain_button = None
 pause_button = None
 
+def update():
+    return(load_name.getText())
+
 def init(inp):
     global brain
     global mouse

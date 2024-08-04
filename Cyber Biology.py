@@ -3,6 +3,7 @@ import pygame_widgets
 from random import randint as rand
 import bot
 import pygame
+import saver
 pygame.init()
 
 keep_going = True
@@ -99,6 +100,7 @@ screen.fill(white)
 steps = 0
 steps2 = 0
 mousedown = 0
+worldname = ""
 
 while keep_going:
     steps2 += 1
@@ -136,6 +138,15 @@ while keep_going:
                             break
             if event.key == pygame.K_F2:
                 render = not render
+            if event.key == pygame.K_F3:#сохранить мир
+                worldname = buttons.update()
+                saver.save(world, objects, steps, worldname)
+            if event.key == pygame.K_F4:#загрузить мир
+                worldname = buttons.update()
+                res = saver.load(worldname, bots)
+                steps = res[0]
+                world = res[1]
+                objects = res[2]
     if not pause[0]:
         steps += 1
         bots[0] = 0

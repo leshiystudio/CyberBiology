@@ -28,9 +28,9 @@ class Bot(GameObject):
             10,
             8,
             6,
+            5,
             4,
-            3,
-            1
+            3
             ]
         self.minerals_list = [
             1,
