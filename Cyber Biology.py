@@ -25,6 +25,7 @@ world_scale = [
     int((W - 300) / 10),
     int(H / 10)
     ]
+world_scale = [60, 60]
 world = [["none" for y in range(world_scale[1])]for x in range(world_scale[0])]
 draw_type = [0]
 font = pygame.font.SysFont(None, 24)
@@ -94,22 +95,6 @@ def mouse_function():
                     objects.add(new_bot)
                     world[botpos[0]][botpos[1]] = "bot"
 
-for x in range(0):
-    while True:
-        color = (
-            rand(0, 255),
-            rand(0, 255),
-            rand(0, 255)
-            )
-        pos = [
-            rand(0, world_scale[0] - 1),
-            rand(0, world_scale[1] - 1)
-            ]
-        if world[pos[0]][pos[1]] == "none":
-            objects.add(bot.Bot(pos, color, world, objects, bots))
-            world[pos[0]][pos[1]] = "bot"
-            break
-
 screen.fill(white)
 steps = 0
 steps2 = 0
@@ -125,7 +110,7 @@ while keep_going:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 keep_going = False
-            if event.key == pygame.K_F1:
+            if event.key == pygame.K_1:
                 steps = 0
                 for i in objects:
                     i.kill()
@@ -145,13 +130,18 @@ while keep_going:
                             objects.add(bot.Bot(pos, color, world, objects, bots))
                             world[pos[0]][pos[1]] = "bot"
                             break
+            if event.key == pygame.K_2:
+                steps = 0
+                for i in objects:
+                    i.kill()
+                    world[i.pos[0]][i.pos[1]] = "none"
     if not pause[0]:
         steps += 1
         bots[0] = 0
         objects.update(draw_type[0])
-    screen.fill(white)
+    screen.fill(grey)
+    pygame.draw.rect(screen, white, (0, 0, 600, 600))
     objects.draw(screen)
-    pygame.draw.rect(screen, grey, (W - 300, 0, 300, H))
     pygame_widgets.update(events)
     if draw_type[0] == 0:
         txt = "Bot color view"

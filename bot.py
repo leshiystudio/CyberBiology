@@ -104,7 +104,8 @@ class Bot(GameObject):
                 (self.pos[0] + GameObject.movelist[rotate][0]) % self.world_scale[0],
                 self.pos[1] + GameObject.movelist[rotate][1]
                 ]
-            if pos2[1] >= 0 and pos2[1] <= self.border - 1:
+            if pos2[1] >= 0 and pos2[1] <= self.world_scale[1] - 1:
+                #print(self.world_scale)
                 if self.world[pos2[0]][pos2[1]] == "none":
                     new_bot = Bot(pos2, self.color, self.world, self.objects, self.bots, energy=int(self.energy * 0.5), draw_type=draw_type)
                     self.energy = int(self.energy * 0.5)
@@ -133,7 +134,7 @@ class Bot(GameObject):
         return(pos)
 
     def attack(self, pos):#атаковать
-        if pos[1] >= 0 and pos[1] <= self.border - 1:
+        if pos[1] >= 0 and pos[1] <= self.world_scale[1] - 1:
             if self.world[pos[0]][pos[1]] == "bot" or self.world[pos[0]][pos[1]] == "organics":
                 victim = None
                 for victim in self.objects:
@@ -287,6 +288,39 @@ class Bot(GameObject):
                 cmd = self.commands[(self.index + 1) % 64] / 64
                 if self.pos[1] / self.world_scale[1] >= cmd:
                     self.next_command(self.commands[(self.index + 2) % 64])
+                else:
+                    self.next_command(self.commands[(self.index + 3) % 64])
+            #--------------------------------------------------------
+            elif command == 45:#энергия соседа больше моей(относительно)
+                rotate = self.commands[(self.index + 1) % 64] % 8
+                pos = self.get_rotate_position(rotate)
+                friend = None
+                for friend in self.objects:
+                    if friend.pos == pos and friend.name == "bot":
+                        break
+                    else:
+                        friend = None
+                if friend != None:
+                    if friend.energy > self.energy:
+                        self.next_command(self.commands[(self.index + 2) % 64])
+                    else:
+                        self.next_command(self.commands[(self.index + 3) % 64])
+                else:
+                    self.next_command(self.commands[(self.index + 3) % 64])
+            elif command == 46:#энергия соседа больше моей(абсолютно)
+                rotate = self.rotate
+                pos = self.get_rotate_position(rotate)
+                friend = None
+                for friend in self.objects:
+                    if friend.pos == pos and friend.name == "bot":
+                        break
+                    else:
+                        friend = None
+                if friend != None:
+                    if friend.energy > self.energy:
+                        self.next_command(self.commands[(self.index + 2) % 64])
+                    else:
+                        self.next_command(self.commands[(self.index + 3) % 64])
                 else:
                     self.next_command(self.commands[(self.index + 3) % 64])
             #--------------------------------------------------------
