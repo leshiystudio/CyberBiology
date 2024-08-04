@@ -4,7 +4,7 @@ pygame.init()
 def is_relative(brain1, brain2):#функция проверки родственников(если 63 из 64 команд совпадают)
     errors = 0
     for i in range(64):
-        if brain1[x][y] != brain2[x][y]:
+        if brain1[i] != brain2[i]:
             errors += 1
         if errors > 1:
             return(False)

@@ -25,7 +25,7 @@ record = 0
 W = pygame.display.Info().current_w
 H = pygame.display.Info().current_h
 screen = pygame.display.set_mode([W, H], pygame.FULLSCREEN)
-description = "Cyber Biology 2 v1.8"
+description = "Cyber Biology 2 v1.9"
 pygame.display.set_caption(description)
 objects = pygame.sprite.Group()
 world_scale = [
