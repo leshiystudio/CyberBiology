@@ -78,7 +78,7 @@ def stop():#функция кнопки остановки симуляции
     )
 
 def save_bot(brain):#сохранить мозг бота
-    file = open(f"Saved Objects/{input_name.getText()}.dat", "w")
+    file = open(f"files/Saved Objects/{input_name.getText()}.dat", "w")
     save_brain = ""
     for x in range(64):
         save_brain += str(brain[x]) + " "
@@ -88,7 +88,7 @@ def save_bot(brain):#сохранить мозг бота
 def load_bot():#загрузить бота
     global brain
     try:
-        file = open(f"Saved Objects/{load_name.getText()}.dat", "r")
+        file = open(f"files/Saved Objects/{load_name.getText()}.dat", "r")
         botcode = file.readline()
         brain[0] = botcode.split(" ")
         for x in range(64):

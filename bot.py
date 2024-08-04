@@ -324,9 +324,11 @@ class Bot(GameObject):
             elif command == 47:#равномерное распределение ресурсов абсолютно
                 pos = self.get_rotate_position(self.rotate)
                 self.give2(pos)
-                self.next_command()
+                self.next_command(2)
                 break
             #--------------------------------------------------------
+            elif command == 48:#безусловный переход
+                self.index = self.commands[(self.index + 1) % 64]
             else:#безусловный переход
                 self.next_command(command)
 

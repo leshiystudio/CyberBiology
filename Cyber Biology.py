@@ -25,7 +25,7 @@ record = 0
 W = pygame.display.Info().current_w
 H = pygame.display.Info().current_h
 screen = pygame.display.set_mode([W, H], pygame.FULLSCREEN)
-description = "Cyber Biology 2 v1.7"
+description = "Cyber Biology 2 v1.8"
 pygame.display.set_caption(description)
 objects = pygame.sprite.Group()
 world_scale = [
@@ -41,13 +41,34 @@ timer = pygame.time.Clock()
 selection = None
 input_name = None
 save_button = None
-with Image.open("organics.png") as organics_img:
+
+#НАСТРОЙКА КАРТИНОК ДЛЯ ЗАПИСИ
+
+with Image.open("files/images/organics.png") as organics_img:
     organics_img.load()
-with Image.open("window.png") as win_img:
-    win_img.load()
 black = Image.new('RGB', (10, 10), (0, 0, 0))
+win_img = Image.new('RGB', (W, H), (128, 128, 128))
+white_img = Image.new('RGB', (world_scale[0] * 10, world_scale[1] * 10), (255, 255, 255))
+win_img.paste(white_img, (0, 0))
+with Image.open("files/images/symbols.png") as symbols_img:
+    symbols_img.load()
+
+symbols = []
+
+for y in range(8):
+    for x in range(8):
+        new_img = symbols_img.crop((x * 16, y * 16, x * 16 + 16, y * 16 + 16))
+        symbols.append(new_img)
 
 #ОСНОВНОЕ
+
+def number_to_image(number, size=7):#создание картинки из текста(для записи)
+    new_img = Image.new('RGB', (16 * size, 16), (128, 128, 128))
+    num = str(number)
+    for i in range(len(num)):
+        img = symbols[int(num[i])]
+        new_img.paste(img, (16 * (size - len(num) + i), 0))
+    return(new_img)
 
 def render_text(text, pos, color=(0, 0, 0), size=24, centerx=False, centery=False):#отрисовка текста на экране
     font = pygame.font.SysFont(None, size)
@@ -242,8 +263,11 @@ while keep_going:#основной цикл
                 win_img2.paste(bot_img, (obj.pos[0] * 10 + 1, obj.pos[1] * 10 + 1))
                 win_img3.paste(bot_energy_img, (obj.pos[0] * 10 + 1, obj.pos[1] * 10 + 1))
                 win_img4.paste(bot_predators_img, (obj.pos[0] * 10 + 1, obj.pos[1] * 10 + 1))
-        win_img2.save(f"record/color/screen{steps // 25}.png")
-        win_img3.save(f"record/energy/screen{steps // 25}.png")
-        win_img4.save(f"record/predators/screen{steps // 25}.png")
+        win_img2.paste(number_to_image(steps), (W - 300, 30))
+        win_img3.paste(number_to_image(steps), (W - 300, 30))
+        win_img4.paste(number_to_image(steps), (W - 300, 30))
+        win_img2.save(f"files/record/color/screen{steps // 25}.png")
+        win_img3.save(f"files/record/energy/screen{steps // 25}.png")
+        win_img4.save(f"files/record/predators/screen{steps // 25}.png")
     timer.tick(240)
 pygame.quit()
