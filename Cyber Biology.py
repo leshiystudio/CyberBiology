@@ -18,14 +18,14 @@ grey = (90, 90, 90)
 W = pygame.display.Info().current_w
 H = pygame.display.Info().current_h
 screen = pygame.display.set_mode([W, H], pygame.FULLSCREEN)
-description = "Cyber Biology"
+description = "Cyber Biology 2"
 pygame.display.set_caption(description)
 objects = pygame.sprite.Group()
 world_scale = [
     int((W - 300) / 10),
     int(H / 10)
     ]
-world_scale = [60, 60]
+#world_scale = [60, 60]
 world = [["none" for y in range(world_scale[1])]for x in range(world_scale[0])]
 draw_type = [0]
 font = pygame.font.SysFont(None, 24)
@@ -130,17 +130,12 @@ while keep_going:
                             objects.add(bot.Bot(pos, color, world, objects, bots))
                             world[pos[0]][pos[1]] = "bot"
                             break
-            if event.key == pygame.K_2:
-                steps = 0
-                for i in objects:
-                    i.kill()
-                    world[i.pos[0]][i.pos[1]] = "none"
     if not pause[0]:
         steps += 1
         bots[0] = 0
         objects.update(draw_type[0])
     screen.fill(grey)
-    pygame.draw.rect(screen, white, (0, 0, 600, 600))
+    pygame.draw.rect(screen, white, (0, 0, world_scale[0] * 10, world_scale[1] * 10))
     objects.draw(screen)
     pygame_widgets.update(events)
     if draw_type[0] == 0:

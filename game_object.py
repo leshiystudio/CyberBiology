@@ -28,7 +28,7 @@ class GameObject(pygame.sprite.Sprite):
             int((self.W - 300) / 10),
             int(self.H / 10)
             ]
-        self.world_scale = [60, 60]
+        #self.world_scale = [60, 60]
 
     def update(self):
         pass
