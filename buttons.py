@@ -1,3 +1,7 @@
+#################################################################
+######################СЮДА ЛУЧШЕ НЕ ХОДИТЬ!######################
+#################################################################
+
 import pygame_widgets
 from pygame_widgets.button import Button
 from pygame_widgets.widget import WidgetHandler
@@ -13,10 +17,10 @@ save_button = None
 show_brain_button = None
 pause_button = None
 
-def update():
+def update():#для сохранения и загрузки мира
     return(load_name.getText())
 
-def init(inp):
+def init(inp):#создать ссылки для передачи данных между частями программы
     global brain
     global mouse
     global draw_type
@@ -28,7 +32,7 @@ def init(inp):
     mouse = inp[3]
     brain = inp[4]
 
-def f1():
+def f1():#смена типа отрисовки
     draw_type[0] = 0
 def f2():
     draw_type[0] = 1
@@ -39,17 +43,18 @@ def f4():
 def f5():
     draw_type[0] = 4
 
-def mouse1():
+def mouse1():#сменить режим мыши
     mouse[0] = "set"
 def mouse2():
     mouse[0] = "remove"
 def mouse3():
     mouse[0] = "select"
 
-def show():
+def show():#функция кнопки "show brain"
     stop()
     render_brain[0] = not render_brain[0]
-def stop():
+
+def stop():#функция кнопки остановки симуляции
     pause[0] = True
     global pause_button
     if pause_button != None:
@@ -72,7 +77,7 @@ def stop():
         onClick=start
     )
 
-def save_bot(brain):
+def save_bot(brain):#сохранить мозг бота
     file = open(f"Saved Objects/{input_name.getText()}.dat", "w")
     save_brain = ""
     for x in range(64):
@@ -80,7 +85,7 @@ def save_bot(brain):
     file.write(save_brain)
     file.close()
 
-def load_bot():
+def load_bot():#загрузить бота
     global brain
     try:
         file = open(f"Saved Objects/{load_name.getText()}.dat", "r")
@@ -90,10 +95,10 @@ def load_bot():
             brain[0][x] = int(brain[0][x])
         file.close()
     except:
-        a = 1
+        print("Loading error!")
     
 
-def start():
+def start():#функция кнопки включения симуляции
     pause[0] = False
     WidgetHandler.removeWidget(start_button)
     global pause_button
@@ -113,7 +118,7 @@ def start():
         onClick=stop
         )
 
-def set_bot_buttons(obj):
+def set_bot_buttons(obj):#создать кнопки в меню выбранного существа
     global save_button
     global input_name
     global show_brain_button
@@ -162,7 +167,7 @@ def set_bot_buttons(obj):
         onClick=show
         )
 
-def remove_bot_buttons():
+def remove_bot_buttons():#удалить кнопки в меню выбранного существа
     global save_button
     global input_name
     global show_brain_button
@@ -173,6 +178,8 @@ def remove_bot_buttons():
     save_button = None
     input_name = None
     show_brain_button = None
+
+#все остальные кнопки
 
 bot_color_button = Button(
     screen,

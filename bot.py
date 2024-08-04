@@ -9,22 +9,22 @@ pygame.init()
 class Bot(GameObject):
     def __init__(self, pos, color, world, objects, bots, energy=1000, draw_type=0):
         GameObject.__init__(self, pos, image_factory.get_image(color))
-        self.name = "bot"
-        self.killed = 0
-        self.color = color
-        self.rotate = rand(0, 7)
-        self.energy = energy
-        self.age = 1000
-        self.world = world
-        self.objects = objects
-        self.index = 0
-        self.commands = [rand(0, 63) for x in range(64)]
-        self.minerals = 0
-        self.attack_count = 0
-        self.photo_count = 0
-        self.minerals_count = 0
-        self.bots = bots
-        self.photo_list = [
+        self.name = "bot"#имя
+        self.killed = 0#мертв бот или нет
+        self.color = color#цвет
+        self.rotate = rand(0, 7)#направление
+        self.energy = energy#енергия
+        self.age = 1000#возраст (чем больше, тем моложе)
+        self.world = world#ссылка на массив с миром
+        self.objects = objects#ссылка на массив с ботами
+        self.index = 0#счетчик команд
+        self.commands = [rand(0, 63) for x in range(64)]#мозг бота
+        self.minerals = 0#количество минералов
+        self.attack_count = 0#красный в режиме отбражения типа питания
+        self.photo_count = 0#зеленый в режиме отбражения типа питания
+        self.minerals_count = 0#синий в режиме отбражения типа питания
+        self.bots = bots#количество ботов(для отображения на экране)
+        self.photo_list = [#массивы с приходом фотосинтеза и минералов в зависимости от уровня
             10,
             8,
             6,
@@ -40,22 +40,22 @@ class Bot(GameObject):
         self.last_draw_type = [0]
         self.change_image(draw_type)
 
-    def next_command(self, i=1):
+    def next_command(self, i=1):#увеличить счетчик на...
         self.index += i
         self.index %= 64
 
-    def bot_in_sector(self):
+    def bot_in_sector(self):#для фотосинтеза и минералов
         sector_len = int(self.world_scale[1] / 8)
         error = self.world_scale[1] - sector_len * 8
         sec = int(self.pos[1] / sector_len)
         if sec > 7:
-            return(10)
+            return(10)#море(будет, если высота мира нацело не делится на 8)
         return(sec)
 
-    def change_image(self, draw_type):
-        if draw_type == 0:
+    def change_image(self, draw_type):#сменить цвет
+        if draw_type == 0:#режим отображения цвета ботов
             self.image = image_factory.get_image(self.color)
-        elif draw_type == 1:
+        elif draw_type == 1:#режим отображения энергии
             g = 255 - int((self.energy / 1000) * 255)
             if g < 0:
                 g = 0
@@ -63,7 +63,7 @@ class Bot(GameObject):
                 self.image = image_factory.get_image((255, g, 0))
             except:
                 print(g)
-        elif draw_type == 2:
+        elif draw_type == 2:#режим отображения минералов
             rg = 255 - int((self.minerals / 1000) * 255)
             if rg < 0:
                 rg = 0
@@ -74,7 +74,7 @@ class Bot(GameObject):
                     255
                     )
                 )
-        elif draw_type == 3:
+        elif draw_type == 3:#режим отображения возраста
             self.image = image_factory.get_image(
                 (
                     int((self.age / 1000) * 255),
@@ -82,7 +82,7 @@ class Bot(GameObject):
                     int((self.age / 1000) * 255)
                     )
                 )
-        elif draw_type == 4:
+        elif draw_type == 4:#режим отображения типа питания(хищников)
             count = sum((self.photo_count, self.attack_count, self.minerals_count))
             if count == 0:
                 R = 128
@@ -134,29 +134,29 @@ class Bot(GameObject):
         return(pos)
 
     def attack(self, pos):#атаковать
-        if pos[1] >= 0 and pos[1] <= self.world_scale[1] - 1:
-            if self.world[pos[0]][pos[1]] == "bot" or self.world[pos[0]][pos[1]] == "organics":
+        if pos[1] >= 0 and pos[1] <= self.world_scale[1] - 1:#границы
+            if self.world[pos[0]][pos[1]] == "bot" or self.world[pos[0]][pos[1]] == "organics":#если есть цель
                 victim = None
-                for victim in self.objects:
+                for victim in self.objects:#поиск жертвы
                     if victim.pos == pos:
                         break
                     else:
                         victim = None
-                if victim != None:
-                    self.energy += victim.energy
-                    victim.killed = 1
+                if victim != None:#если есть жертва
+                    self.energy += victim.energy#отнять у жертвы энергию
+                    victim.killed = 1#убить жертву
                     victim.kill()
-                    self.attack_count += 1
+                    self.attack_count += 1#бот краснеет
             self.world[pos[0]][pos[1]] = "none"
 
-    def give(self, pos):
+    def give(self, pos):#отдать соседу часть энергии
         friend = None
-        for friend in self.objects:
+        for friend in self.objects:#поиск соседа
             if friend.pos == pos and friend.name == "bot":
                 break
             else:
                 friend = None
-        if friend != None:
+        if friend != None:#если есть сосед, отдать ему 1/4 своих ресурсов
             friend.energy += int(self.energy / 4)
             friend.minerals += int(self.minerals / 4)
             self.energy -= int(self.energy / 4)
@@ -323,39 +323,39 @@ class Bot(GameObject):
                 break
             elif command == 47:#равномерное распределение ресурсов абсолютно
                 pos = self.get_rotate_position(self.rotate)
-                self.give(pos)
-                self.next_command(2)
+                self.give2(pos)
+                self.next_command()
                 break
             #--------------------------------------------------------
             else:#безусловный переход
                 self.next_command(command)
 
     def update(self, draw_type):
-        self.bots[0] += 1
-        if not self.killed:
+        self.bots[0] += 1#увеличить счетчик ботов на один
+        if not self.killed:#если бот не мертв:
             self.world[self.pos[0]][self.pos[1]] = "bot"
-            self.age -= 1
-            self.energy -= 1
-            sector = self.bot_in_sector()
-            if sector <= 7 and sector >= 5:
+            self.age -= 1#постареть
+            self.energy -= 1#уменьшить количество энергии
+            sector = self.bot_in_sector()#для минералов
+            if sector <= 7 and sector >= 5:#приход минералов
                 self.minerals += self.minerals_list[sector - 5]
-            if draw_type != self.last_draw_type:
+            if draw_type != self.last_draw_type:#сменить режим отрисовки
                 self.last_draw_type[0] = draw_type
                 self.change_image(draw_type)
-            self.update_commands(draw_type)
-            if self.energy >= 800:
+            self.update_commands(draw_type)#обновить мозг
+            if self.energy >= 800:#если энергии > 800
                 self.multiply(draw_type, self.rotate)
-            if self.energy > 1000:
+            if self.energy > 1000:#ограничитель количества энергии
                 self.energy = 1000
-            if self.minerals > 1000:
+            if self.minerals > 1000:#ограничитель количества минералов
                 self.minerals = 1000
             if self.age <= 0:
-                self.world[self.pos[0]][self.pos[1]] = "organics"
+                self.world[self.pos[0]][self.pos[1]] = "organics"#умереть от старости(органика появляется)
                 self.objects.add(organics.Organics(self.pos, self.world, self.objects, self.energy))
                 #self.world[self.pos[0]][self.pos[1]] = "none"
                 self.killed = 1
                 self.kill()
-            if self.energy <= 0:
+            if self.energy <= 0:#умереть от недостатка энергии(органика не появляется)
                 self.world[self.pos[0]][self.pos[1]] = "none"
                 self.killed = 1
                 self.kill()
