@@ -337,6 +337,8 @@ public class Bot{
 				index += 1;
 				index %= 64;
 				break;
+			}else if (command == 48) {//безусловный переход
+				index = commands[(index + 1) % 64];
 			}else {
 				index += command;
 				index %= 64;
@@ -468,5 +470,22 @@ public class Bot{
 			sec = 10;
 		}
 		return(sec);
+	}
+	public int border(int number, int border1, int border2) {
+		if (number > border1) {
+			number = border1;
+		}else if (number < border2) {
+			number = border2;
+		}
+		return(number);
+	}
+	public int max(int number1, int number2) {//максимальное из двух чисел
+		if (number1 > number2) {
+			return(number1);
+		}else if (number2 > number1) {
+			return(number2);
+		}else {
+			return(number1);
+		}
 	}
 }
