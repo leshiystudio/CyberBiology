@@ -14,7 +14,6 @@ public class Bot{
 	public int xpos;
 	public int ypos;
 	public Color color;
-	public Color relative_color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
 	public Color starting_color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
 	public int energy;
 	public int minerals;
@@ -133,7 +132,7 @@ public class Bot{
 			}else if (draw_type == 6) {//кланов
 				canvas.setColor(starting_color);
 			}else if (draw_type == 7) {//родственников
-				canvas.setColor(relative_color);
+				//
 			}
 			//canvas.fillRect(x, y, 5, 5);
 			canvas.fillRect(x + 1, y + 1, 8, 8);
@@ -143,14 +142,29 @@ public class Bot{
 			}
 			if (enr_chain_next != null) {
 				if (Math.abs(xpos - enr_chain_next.xpos) > 1) {
-					int xpos_ = enr_chain_next.xpos - 162;
-					canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5, enr_chain_next.ypos * 10 + 5);
+					int xpos_ = 0;
+					if (xpos - enr_chain_next.xpos > 0) {//если я справа
+						xpos_= enr_chain_next.xpos + 162;
+					}else if (xpos - enr_chain_next.xpos < 0) {//если я слева
+						xpos_= enr_chain_next.xpos - 162;
+					}
+					canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5 + (xpos - xpos_) * 5, enr_chain_next.ypos * 10 + 5 + (ypos - enr_chain_next.ypos) * 5);
 				}else {
 					canvas.drawLine(x + 5, y + 5, enr_chain_next.xpos * 10 + 5, enr_chain_next.ypos * 10 + 5);
 				}
 			}
 			if (enr_chain_prev != null) {
-				canvas.drawLine(x + 5, y + 5, enr_chain_prev.xpos * 10 + 5, enr_chain_prev.ypos * 10 + 5);
+				if (Math.abs(xpos - enr_chain_prev.xpos) > 1) {
+					int xpos_ = 0;
+					if (xpos - enr_chain_prev.xpos > 0) {//если я справа
+						xpos_= enr_chain_prev.xpos + 162;
+					}else if (xpos - enr_chain_prev.xpos < 0) {//если я слева
+						xpos_= enr_chain_prev.xpos - 162;
+					}
+					canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5 + (xpos - xpos_) * 5, enr_chain_prev.ypos * 10 + 5 + (ypos - enr_chain_prev.ypos) * 5);
+				}else {
+					canvas.drawLine(x + 5, y + 5, enr_chain_prev.xpos * 10 + 5, enr_chain_prev.ypos * 10 + 5);
+				}
 			} 
 		}else {//рисуем органику
 			//canvas.setColor(new Color(90, 90, 90));
@@ -907,10 +921,8 @@ public class Bot{
 						new_brain[i] = commands[i];
 					}
 					//
-					Color new_relative_color = relative_color;
 					if (rand.nextInt(4) == 0) {//мутация
 						new_brain[rand.nextInt(67)] = rand.nextInt(64);
-						new_relative_color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
 					}
 					//
 					Bot new_bot;
@@ -921,7 +933,6 @@ public class Bot{
 					minerals /= 2;
 					new_bot.commands = new_brain;
 					new_bot.starting_color = starting_color;
-					new_bot.relative_color = new_relative_color;
 					map[pos[0]][pos[1]] = new_bot;
 					iterator.add(new_bot);
 					//

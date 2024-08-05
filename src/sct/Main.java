@@ -4,7 +4,7 @@ import javax.swing.*;
 
 public class Main{
 	public static void main(String[] args) {
-		JFrame frame = new JFrame("Cyber biology 2 v2.0 pre-release 1");
+		JFrame frame = new JFrame("Cyber biology 2 v2.0");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.add(new World());
 		frame.setSize(1920, 1080);
