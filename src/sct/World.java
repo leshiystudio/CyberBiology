@@ -9,17 +9,15 @@ import java.util.Random;
 import javax.swing.*;
 import java.awt.Font;
 //
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.File;
-import java.awt.Robot;
-import java.awt.Toolkit;
-import java.awt.Rectangle;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.awt.AWTException;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
 
-import javax.swing.filechooser.FileSystemView;
 import java.awt.Graphics2D;
 
 public class World extends JPanel{
@@ -28,7 +26,7 @@ public class World extends JPanel{
 	Timer timer;
 	int delay = 10;
 	Random rand = new Random();
-	int[][] Map = new int[162][108];//0 - none, 1 - bot, 2 - organics
+	Bot[][] Map = new Bot[162][108];//0 - none, 1 - bot, 2 - organics
 	Color gray = new Color(100, 100, 100);
 	Color green = new Color(0, 255, 0);
 	Color red = new Color(255, 0, 0);
@@ -48,11 +46,13 @@ public class World extends JPanel{
 	boolean render = true;
 	Bot selection = null;
 	int[] botpos = new int [2];
-	Bot for_set = null;
+	int[] for_set;
 	JButton save_button = new JButton("Save");
 	JButton show_brain_button = new JButton("Show brain");
 	JButton render_button = new JButton("Render: on");
 	JButton record_button = new JButton("Record: off");
+	JTextField for_save = new JTextField();
+	JTextField for_load = new JTextField();
 	boolean sh_brain = false;
 	boolean rec = false;
 	public World() {
@@ -98,7 +98,7 @@ public class World extends JPanel{
         remove_button.setBounds(W - 100, 455, 95, 20);
         add(remove_button);
         //
-        //save_button.addActionListener(new remove());
+        save_button.addActionListener(new save_bot());
         save_button.setBounds(W - 300, 365, 125, 20);
         save_button.setEnabled(false);
         add(save_button);
@@ -107,16 +107,18 @@ public class World extends JPanel{
         show_brain_button.setBounds(W - 170, 365, 125, 20);
         show_brain_button.setEnabled(false);
         add(show_brain_button);
-        JTextField for_save = new JTextField();
+        //
         for_save.setBounds(W - 300, 410, 250, 20);
         add(for_save);
-        JTextField for_load = new JTextField();
+        //
         for_load.setBounds(W - 300, 515, 250, 20);
         add(for_load);
+        //
         JButton load_bot_button = new JButton("Load bot");
-        //load_bot_button.addActionListener(new remove());
+        load_bot_button.addActionListener(new load_bot());
         load_bot_button.setBounds(W - 300, 540, 125, 20);
         add(load_bot_button);
+        //
         JButton load_world_button = new JButton("Load world");
         //load_world_button.addActionListener(new remove());
         load_world_button.setBounds(W - 170, 540, 125, 20);
@@ -139,6 +141,14 @@ public class World extends JPanel{
         add(kill_button);
 		//newPopulation();
 		timer.start();
+	}
+	public boolean find_map_pos(int[] pos, int state) {
+		if (Map[pos[0]][pos[1]] != null) {
+			if (Map[pos[0]][pos[1]].state == state) {
+				return(true);
+			}
+		}
+		return(false);
 	}
 	public void paintComponent(Graphics canvas) {
 		super.paintComponent(canvas);
@@ -163,7 +173,7 @@ public class World extends JPanel{
 		canvas.setColor(black);
 		canvas.setFont(new Font("arial", Font.BOLD, 18));
 		canvas.drawString("Main: ", W - 300, 20);
-		canvas.drawString("version 1.9", W - 300, 40);
+		canvas.drawString("version 1.9.1", W - 300, 40);
 		canvas.drawString("steps: " + String.valueOf(steps), W - 300, 60);
 		canvas.drawString("objects: " + String.valueOf(obj_count) + ", bots: " + String.valueOf(b_count), W - 300, 80);
 		if (draw_type == 0) {
@@ -239,7 +249,7 @@ public class World extends JPanel{
 					b.Draw(g2d, draw_type);
 				}
 				g2d.dispose();
-				draw_type = 1;
+				draw_type = 5;
 				BufferedImage buff3 = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
 				g2d = buff3.createGraphics();
 				g2d.setColor(Color.WHITE);
@@ -260,21 +270,22 @@ public class World extends JPanel{
 	public void newPopulation() {
 		steps = 0;
 		objects = new ArrayList<Bot>();
-		Map = new int[162][108];//0 - none, 1 - bot, 2 - organics
+		Map = new Bot[162][108];//0 - none, 1 - bot, 2 - organics
 		for (int i = 0; i < 1000; i++) {
 			while(true){
 				int x = rand.nextInt(162);
 				int y = rand.nextInt(108);
-				if (Map[x][y] == 0) {
-					objects.add(new Bot(
+				if (Map[x][y] == null) {
+					Bot new_bot = new Bot(
 						x,
 						y,
 						new Color(rand.nextInt(256),rand.nextInt(256), rand.nextInt(256)),
 						1000,
 						Map,
 						objects
-					));
-					Map[x][y] = 1;
+					);
+					objects.add(new_bot);
+					Map[x][y] = new_bot;
 					break;
 				}
 			}
@@ -287,14 +298,11 @@ public class World extends JPanel{
 				botpos[0] = e.getX() / 10;
 				botpos[1] = e.getY() / 10;
 				if (mouse == 0) {//select
-					if (Map[botpos[0]][botpos[1]] == 1) {
-						for(Bot b: objects) {
-							if (b.xpos == botpos[0] && b.ypos == botpos[1]) {
-								selection = b;
-								save_button.setEnabled(true);
-								show_brain_button.setEnabled(true);
-							}
-						}
+					if (find_map_pos(botpos, 0)) {
+						Bot b = Map[botpos[0]][botpos[1]];
+						selection = b;
+						save_button.setEnabled(true);
+						show_brain_button.setEnabled(true);
 					}else {
 						selection = null;
 						save_button.setEnabled(false);
@@ -303,20 +311,23 @@ public class World extends JPanel{
 					}
 				}else if (mouse == 1) {//set
 					if (for_set != null) {
-						if (Map[botpos[0]][botpos[1]] == 0) {
-							objects.add(for_set);
-							Map[botpos[0]][botpos[1]] = for_set.state2;
+						if (Map[botpos[0]][botpos[1]] == null) {
+							if (for_set != null) {
+								Bot new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, objects);
+								for (int i = 0; i < 64; i++) {
+									new_bot.commands[i] = for_set[i];
+								}
+								objects.add(new_bot);
+								Map[botpos[0]][botpos[1]] = new_bot;
+							}
 						}
 					}
 				}else {//remove
-					if (Map[botpos[0]][botpos[1]] != 0) {
-						for(Bot b: objects) {
-							if (b.xpos == botpos[0] && b.ypos == botpos[1]) {
-								b.energy = 0;
-								b.killed = 1;
-								Map[botpos[0]][botpos[1]] = 0;
-							}
-						}
+					if (Map[botpos[0]][botpos[1]] != null) {
+						Bot b = Map[botpos[0]][botpos[1]];
+						b.energy = 0;
+						b.killed = 1;
+						Map[botpos[0]][botpos[1]] = null;
 					}
 				}
 			}
@@ -326,16 +337,24 @@ public class World extends JPanel{
 				botpos[0] = e.getX() / 10;
 				botpos[1] = e.getY() / 10;
 				if (mouse == 1) {//set
-					//
-				}else if (mouse == 2) {//remove
-					if (Map[botpos[0]][botpos[1]] != 0) {
-						for(Bot b: objects) {
-							if (b.xpos == botpos[0] && b.ypos == botpos[1]) {
-								b.energy = 0;
-								b.killed = 1;
-								Map[botpos[0]][botpos[1]] = 0;
+					if (for_set != null) {
+						if (Map[botpos[0]][botpos[1]] == null) {
+							if (for_set != null) {
+								Bot new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, objects);
+								for (int i = 0; i < 64; i++) {
+									new_bot.commands[i] = for_set[i];
+								}
+								objects.add(new_bot);
+								Map[botpos[0]][botpos[1]] = new_bot;
 							}
 						}
+					}
+				}else if (mouse == 2) {//remove
+					if (Map[botpos[0]][botpos[1]] != null) {
+						Bot b = Map[botpos[0]][botpos[1]];
+						b.energy = 0;
+						b.killed = 1;
+						Map[botpos[0]][botpos[1]] = null;
 					}
 				}
 			}
@@ -368,7 +387,8 @@ public class World extends JPanel{
 					}
 				}
 				if (selection != null) {
-					if (selection.killed == 1 || Map[selection.xpos][selection.ypos] != 1 || selection.state != 0){
+					int[] pos = {selection.xpos, selection.ypos};
+					if (selection.killed == 1 || !find_map_pos(pos, 0) || selection.state != 0){
 						selection = null;
 						save_button.setEnabled(false);
 						show_brain_button.setEnabled(false);
@@ -411,6 +431,11 @@ public class World extends JPanel{
 	private class dr5 implements ActionListener{
 		public void actionPerformed(ActionEvent e) {
 			draw_type = 4;
+		}
+	}
+	private class dr6 implements ActionListener{
+		public void actionPerformed(ActionEvent e) {
+			draw_type = 5;
 		}
 	}
 	private class start_stop implements ActionListener{
@@ -477,7 +502,47 @@ public class World extends JPanel{
 		public void actionPerformed(ActionEvent e) {
 			steps = 0;
 			objects = new ArrayList<Bot>();
-			Map = new int[162][108];//0 - none, 1 - bot, 2 - organics
+			Map = new Bot[162][108];//0 - none, 1 - bot, 2 - organics
+		}
+	}
+	private class save_bot implements ActionListener{
+		public void actionPerformed(ActionEvent e) {
+			String txt = "";
+			for (int i = 0; i < 64; i++) {
+				txt += String.valueOf(selection.commands[i]) + " ";
+			}
+			try {
+	            FileWriter fileWriter = new FileWriter("saved objects/" + for_save.getText() + ".dat");
+	            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+	 
+	            bufferedWriter.write(txt);
+	 
+	            bufferedWriter.close();
+	        } catch (IOException ex) {
+	            System.out.println("Ошибка при записи в файл");
+	            ex.printStackTrace();
+	        }
+		}
+	}
+	private class load_bot implements ActionListener{
+		public void actionPerformed(ActionEvent e) {
+			try {
+	            FileReader fileReader = new FileReader("saved objects/" + for_load.getText() + ".dat");
+	            BufferedReader bufferedReader = new BufferedReader(fileReader);
+	 
+	            String line = bufferedReader.readLine();
+	 
+	            bufferedReader.close();
+	            
+	            String[] l = line.split(" ");
+	            for_set = new int[64];
+	            for (int i = 0; i < 64; i++) {
+	            	for_set[i] = Integer.parseInt(l[i]);
+	            }
+	        } catch (IOException ex) {
+	            System.out.println("Ошибка при чтении файла");
+	            ex.printStackTrace();
+	        }
 		}
 	}
 }
