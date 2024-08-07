@@ -25,7 +25,9 @@ public class World extends JPanel{
 	Timer timer;
 	int delay = 10;
 	Random rand = new Random();
-	Bot[][] Map = new Bot[162][108];//0 - none, 1 - bot, 2 - organics
+	//int[] world_scale = {324, 216};
+	int[] world_scale = {162, 108};
+	Bot[][] Map = new Bot[world_scale[0]][world_scale[1]];//0 - none, 1 - bot, 2 - organics
 	Color gray = new Color(100, 100, 100);
 	Color green = new Color(0, 255, 0);
 	Color red = new Color(255, 0, 0);
@@ -57,7 +59,7 @@ public class World extends JPanel{
 	JButton energy_button;
 	JButton color_button;
 	JButton minerals_button;
-	JButton mimicry_button;
+	JButton relatives_button;
 	JButton age_button;
 	JButton load_bot_button;
 	JButton load_world_button;
@@ -112,9 +114,9 @@ public class World extends JPanel{
 		color_button.setBounds(W - 300, 240, 125, 20);
         add(color_button);
         //
-        mimicry_button = new JButton("Mimicry");
-        mimicry_button.addActionListener(new change_draw_type(5));
-		mimicry_button.setBounds(W - 300, 40, 125, 20);
+        relatives_button = new JButton("Relatives");
+        relatives_button.addActionListener(new change_draw_type(7));
+        relatives_button.setBounds(W - 300, 40, 125, 20);
 		//
 		clans_button = new JButton("Clans");
 		clans_button.addActionListener(new change_draw_type(6));
@@ -122,66 +124,66 @@ public class World extends JPanel{
         //
         select_button = new JButton("Select");
         select_button.addActionListener(new select());
-		select_button.setBounds(W - 300, 455, 95, 20);
+		select_button.setBounds(W - 300, 475, 95, 20);
         add(select_button);
         //
         set_button = new JButton("Set");
         set_button.addActionListener(new set());
-        set_button.setBounds(W - 200, 455, 95, 20);
+        set_button.setBounds(W - 200, 475, 95, 20);
         add(set_button);
         //
         remove_button = new JButton("Remove");
         remove_button.addActionListener(new remove());
-        remove_button.setBounds(W - 100, 455, 95, 20);
+        remove_button.setBounds(W - 100, 475, 95, 20);
         add(remove_button);
         //
         save_button.addActionListener(new save_bot());
-        save_button.setBounds(W - 300, 365, 125, 20);
+        save_button.setBounds(W - 300, 385, 125, 20);
         save_button.setEnabled(false);
         add(save_button);
         //
         show_brain_button.addActionListener(new shbr());
-        show_brain_button.setBounds(W - 170, 365, 125, 20);
+        show_brain_button.setBounds(W - 170, 385, 125, 20);
         show_brain_button.setEnabled(false);
         add(show_brain_button);
         //
-        for_save.setBounds(W - 300, 410, 250, 20);
+        for_save.setBounds(W - 300, 430, 250, 20);
         add(for_save);
         //
-        for_load.setBounds(W - 300, 515, 250, 20);
+        for_load.setBounds(W - 300, 535, 250, 20);
         add(for_load);
         //
         load_bot_button = new JButton("Load bot");
         load_bot_button.addActionListener(new load_bot());
-        load_bot_button.setBounds(W - 300, 540, 90, 20);
+        load_bot_button.setBounds(W - 300, 560, 90, 20);
         add(load_bot_button);
         //
         load_world_button = new JButton("Load world");
         load_world_button.addActionListener(new load_world());
-        load_world_button.setBounds(W - 205, 540, 90, 20);
+        load_world_button.setBounds(W - 205, 560, 90, 20);
         add(load_world_button);
         //
         save_world_button = new JButton("Save world");
         save_world_button.addActionListener(new save_world());
-        save_world_button.setBounds(W - 110, 540, 90, 20);
+        save_world_button.setBounds(W - 110, 560, 90, 20);
         add(save_world_button);
         //
         new_population_button = new JButton("New population");
         new_population_button.addActionListener(new nwp());
-        new_population_button.setBounds(W - 300, 590, 125, 20);
+        new_population_button.setBounds(W - 300, 610, 125, 20);
         add(new_population_button);
         //
         render_button.addActionListener(new rndr());
-        render_button.setBounds(W - 300, 615, 125, 20);
+        render_button.setBounds(W - 300, 635, 125, 20);
         add(render_button);
         //
         record_button.addActionListener(new rcrd());
-        record_button.setBounds(W - 170, 615, 125, 20);
+        record_button.setBounds(W - 170, 635, 125, 20);
         add(record_button);
         //
         kill_button = new JButton("Kill all");
         kill_button.addActionListener(new kill_all());
-        kill_button.setBounds(W - 170, 590, 125, 20);
+        kill_button.setBounds(W - 170, 610, 125, 20);
         add(kill_button);
         //
         other_button = new JButton("Other...");
@@ -193,10 +195,6 @@ public class World extends JPanel{
         close_draw_types_button.addActionListener(new close_draw_types());
         close_draw_types_button.setBounds(W - 300, 0, 255, 35);
         //
-        //param_button = new JButton("Parametres");
-        //param_button.addActionListener(new open_param());
-        //param_button.setBounds(W - 300, 640, 125, 20);
-        //add(param_button);
 		timer.start();
 	}
 	public void remove_main() {
@@ -205,7 +203,7 @@ public class World extends JPanel{
 		remove(energy_button);
 		remove(minerals_button);
 		remove(age_button);
-		remove(mimicry_button);
+		remove(relatives_button);
 		remove(color_button);
 		remove(render_button);
 		remove(record_button);
@@ -218,7 +216,6 @@ public class World extends JPanel{
 		remove(load_world_button);
 		remove(save_button);
 		remove(load_bot_button);
-		//remove(param_button);
 		remove(kill_button);
 		remove(set_button);
 		remove(select_button);
@@ -231,7 +228,7 @@ public class World extends JPanel{
 		add(energy_button);
 		add(minerals_button);
 		add(age_button);
-		add(mimicry_button);
+		add(relatives_button);
 		add(color_button);
 		add(render_button);
 		add(record_button);
@@ -244,7 +241,6 @@ public class World extends JPanel{
 		add(load_world_button);
 		add(save_button);
 		add(load_bot_button);
-		//add(param_button);
 		add(kill_button);
 		add(set_button);
 		add(select_button);
@@ -261,29 +257,31 @@ public class World extends JPanel{
 	}
 	public void paintComponent(Graphics canvas) {
 		super.paintComponent(canvas);
-		//for (int x = 0; x < 162; x++) {
-		//	for (int y = 0; y < 108; y++) {
-		//		if (Map[x][y] == 1) {
-		//			canvas.setColor(green);
-		//			canvas.fillRect(x * 10, y * 10, 10, 10);
-		//		}else if (Map[x][y] == 2){
-		//			canvas.setColor(red);
-		//			canvas.fillRect(x * 10, y * 10, 10, 10);
-		//		}
-		//	}
-		//}
 		canvas.setColor(white);
 		canvas.fillRect(0, 0, W - 300, 1080);
 		if (render) {
-			for(Bot b: objects) {
+			for(Bot b: objects) {//рисуем ботов
 				b.Draw(canvas, draw_type);
 			}
+			//for (int x = 0; x < world_scale[0]; x++) {//для отладки
+			//	for (int y = 0; y < world_scale[1]; y++) {
+			//		if (Map[x][y] != null) {
+			//			if (Map[x][y].state == 0) {
+			//				canvas.setColor(green);
+			//				canvas.fillRect(x * 10, y * 10, 5, 5);
+			//			}else if (Map[x][y].state == 1){
+			//				canvas.setColor(red);
+			//				canvas.fillRect(x * 10, y * 10, 5, 5);
+			//			}
+			//		}
+			//	}
+			//}
 		}
-		if (menu == 0) {
+		if (menu == 0) {//
 			canvas.setColor(black);
 			canvas.setFont(new Font("arial", Font.BOLD, 18));
 			canvas.drawString("Main: ", W - 300, 20);
-			canvas.drawString("version 1.11", W - 300, 40);
+			canvas.drawString("version 2.0 pre-release 1", W - 300, 40);
 			canvas.drawString("steps: " + String.valueOf(steps), W - 300, 60);
 			canvas.drawString("objects: " + String.valueOf(obj_count) + ", bots: " + String.valueOf(b_count), W - 300, 80);
 			if (draw_type == 0) {
@@ -297,9 +295,11 @@ public class World extends JPanel{
 			}else if (draw_type == 4){
 				txt = "age view";
 			}else if (draw_type == 5) {
-				txt = "mimicry view";
+				txt = "virus view";
 			}else if (draw_type == 6) {
 				txt = "clans view";
+			}else if (draw_type == 7) {
+				txt = "relatives view";
 			}
 			canvas.drawString("render type: " + txt, W - 300, 100);
 			if (mouse == 0) {
@@ -312,20 +312,39 @@ public class World extends JPanel{
 			canvas.drawString("mouse function: " + txt2, W - 300, 120);
 			canvas.drawString("Render types:", W - 300, 180);
 			canvas.drawString("Selection:", W - 300, 275);
-			canvas.drawString("enter name:", W - 300, 405);
-			canvas.drawString("Mouse functions:", W - 300, 445);
-			canvas.drawString("Load:", W - 300, 490);
-			canvas.drawString("enter name:", W - 300, 510);
-			canvas.drawString("Controls:", W - 300, 580);
+			canvas.drawString("enter name:", W - 300, 425);
+			canvas.drawString("Mouse functions:", W - 300, 470);
+			canvas.drawString("Load:", W - 300, 510);
+			canvas.drawString("enter name:", W - 300, 530);
+			canvas.drawString("Controls:", W - 300, 600);
 			if (selection != null) {
-				canvas.drawString("energy: " + String.valueOf(selection.energy) + ", minerals: " + String.valueOf(selection.minerals), W - 300, 295);
-				canvas.drawString("age: " + String.valueOf(selection.age), W - 300, 315);
-				canvas.drawString("position: " + "[" + String.valueOf(selection.xpos) + ", " + String.valueOf(selection.ypos) + "]", W - 300, 335);
-				canvas.drawString("color: " + "(" + String.valueOf(selection.color.getRed()) + ", " + String.valueOf(selection.color.getGreen()) + ", " + String.valueOf(selection.color.getBlue()) + ")", W - 300, 355);
-				canvas.setColor(new Color(90, 90, 90, 90));
+				if (selection.state == 0) {
+					canvas.drawString("bot", W - 300, 295);
+					canvas.drawString("energy: " + String.valueOf(selection.energy) + ", minerals: " + String.valueOf(selection.minerals), W - 300, 315);
+					canvas.drawString("age: " + String.valueOf(selection.age), W - 300, 335);
+					canvas.drawString("position: " + "[" + String.valueOf(selection.xpos) + ", " + String.valueOf(selection.ypos) + "]", W - 300, 355);
+					canvas.drawString("color: " + "(" + String.valueOf(selection.color.getRed()) + ", " + String.valueOf(selection.color.getGreen()) + ", " + String.valueOf(selection.color.getBlue()) + ")", W - 300, 375);
+				}else if (selection.state == 1) {
+					canvas.drawString("organics", W - 300, 295);
+					canvas.drawString("energy: " + String.valueOf(selection.energy), W - 300, 315);
+					canvas.drawString("position: " + "[" + String.valueOf(selection.xpos) + ", " + String.valueOf(selection.ypos) + "]", W - 300, 335);
+				}
+				canvas.setColor(new Color(0, 0, 0, 200));
 				canvas.fillRect(0, 0, W - 300, 1080);
 				canvas.setColor(new Color(255, 0, 0));
-				canvas.fillRect(selection.xpos * 10, selection.ypos * 10, 10, 10);
+				if (selection.state == 0) {
+					canvas.fillRect(selection.xpos * 10, selection.ypos * 10, 10, 10);
+				}else if (selection.state == 1) {
+					canvas.fillRect(1 + selection.xpos * 10, 1 + selection.ypos * 10, 8, 8);
+				}
+				//if (selection.enr_chain_next != null) {//для отладки
+				//	canvas.setColor(new Color(255, 0, 255));
+				//	canvas.fillRect(selection.enr_chain_next.xpos * 10, selection.enr_chain_next.ypos * 10, 10, 10);
+				//}
+				//if (selection.enr_chain_prev != null) {
+				//	canvas.setColor(new Color(255, 255, 0));
+				//	canvas.fillRect(selection.enr_chain_prev.xpos * 10, selection.enr_chain_prev.ypos * 10, 10, 10);
+				//}
 			}else {
 				canvas.drawString("none", W - 300, 295);
 			}
@@ -342,59 +361,69 @@ public class World extends JPanel{
 					}
 				}
 			}
-			if (rec && steps % 25 == 0) {
-				try {
-					int last = draw_type;
-					draw_type = 0;
-					BufferedImage buff = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
-					Graphics2D g2d = buff.createGraphics();
-					g2d.setColor(Color.WHITE);
-					g2d.fillRect(0, 0, 1920, 1080);
-					for(Bot b: objects) {
-						b.Draw(g2d, draw_type);
-					}
-					g2d.dispose();
-					draw_type = 2;
-					BufferedImage buff2 = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
-					g2d = buff2.createGraphics();
-					g2d.setColor(Color.WHITE);
-					g2d.fillRect(0, 0, 1920, 1080);
-					for(Bot b: objects) {
-						b.Draw(g2d, draw_type);
-					}
-					g2d.dispose();
-					draw_type = 5;
-					BufferedImage buff3 = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
-					g2d = buff3.createGraphics();
-					g2d.setColor(Color.WHITE);
-					g2d.fillRect(0, 0, 1920, 1080);
-					for(Bot b: objects) {
-						b.Draw(g2d, draw_type);
-					}
-					g2d.dispose();
-					draw_type = last;
-					ImageIO.write(buff, "png", new File("record/predators/screen" + String.valueOf(steps / 25)+ ".png"));
-					ImageIO.write(buff2, "png", new File("record/energy/screen" + String.valueOf(steps / 25)+ ".png"));
-					ImageIO.write(buff3, "png", new File("record/color/screen" + String.valueOf(steps / 25)+ ".png"));
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
 		}else {
 			canvas.setColor(gray);
 			canvas.drawRect(0, 0, W, H);
+		}
+		//запись
+		if (rec && steps % 25 == 0) {
+			try {
+				BufferedImage buff = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
+				Graphics2D g2d = buff.createGraphics();
+				g2d.setColor(Color.WHITE);
+				g2d.fillRect(0, 0, 1920, 1080);
+				for(Bot b: objects) {
+					b.Draw(g2d, 0);
+				}
+				g2d.dispose();
+				//
+				BufferedImage buff2 = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
+				g2d = buff2.createGraphics();
+				g2d.setColor(Color.WHITE);
+				g2d.fillRect(0, 0, 1920, 1080);
+				for(Bot b: objects) {
+					b.Draw(g2d, 2);
+				}
+				g2d.dispose();
+				//
+				BufferedImage buff3 = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
+				g2d = buff3.createGraphics();
+				g2d.setColor(Color.WHITE);
+				g2d.fillRect(0, 0, 1920, 1080);
+				for(Bot b: objects) {
+					b.Draw(g2d, 1);
+				}
+				g2d.dispose();
+				//
+				BufferedImage buff4 = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
+				g2d = buff4.createGraphics();
+				g2d.setColor(Color.WHITE);
+				g2d.fillRect(0, 0, 1920, 1080);
+				for(Bot b: objects) {
+					b.Draw(g2d, 6);
+				}
+				g2d.dispose();
+				//
+				ImageIO.write(buff, "png", new File("record/predators/screen" + String.valueOf(steps / 25)+ ".png"));
+				ImageIO.write(buff2, "png", new File("record/energy/screen" + String.valueOf(steps / 25)+ ".png"));
+				ImageIO.write(buff3, "png", new File("record/color/screen" + String.valueOf(steps / 25)+ ".png"));
+				ImageIO.write(buff4, "png", new File("record/clans/screen" + String.valueOf(steps / 25)+ ".png"));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	public void newPopulation() {
 		steps = 0;
 		objects = new ArrayList<Bot>();
-		Map = new Bot[162][108];//0 - none, 1 - bot, 2 - organics
+		Map = new Bot[world_scale[0]][world_scale[1]];//0 - none, 1 - bot, 2 - organics
 		for (int i = 0; i < 1000; i++) {
 			while(true){
-				int x = rand.nextInt(162);
-				int y = rand.nextInt(108);
+				int x = rand.nextInt(world_scale[0]);
+				int y = rand.nextInt(world_scale[1]);
 				if (Map[x][y] == null) {
-					Bot new_bot = new Bot(
+					Bot new_bot;
+					new_bot = new Bot(
 						x,
 						y,
 						new Color(rand.nextInt(256),rand.nextInt(256), rand.nextInt(256)),
@@ -402,6 +431,7 @@ public class World extends JPanel{
 						Map,
 						objects
 					);
+					new_bot.self = new_bot;
 					objects.add(new_bot);
 					Map[x][y] = new_bot;
 					break;
@@ -416,11 +446,17 @@ public class World extends JPanel{
 				botpos[0] = e.getX() / 10;
 				botpos[1] = e.getY() / 10;
 				if (mouse == 0) {//select
-					if (find_map_pos(botpos, 0)) {
+					if (Map[botpos[0]][botpos[1]] != null) {
 						Bot b = Map[botpos[0]][botpos[1]];
 						selection = b;
-						save_button.setEnabled(true);
-						show_brain_button.setEnabled(true);
+						if (b.state == 0) {
+							save_button.setEnabled(true);
+							show_brain_button.setEnabled(true);
+						}else {
+							save_button.setEnabled(false);
+							show_brain_button.setEnabled(false);
+							sh_brain = false;
+						}
 					}else {
 						selection = null;
 						save_button.setEnabled(false);
@@ -431,8 +467,12 @@ public class World extends JPanel{
 					if (for_set != null) {
 						if (Map[botpos[0]][botpos[1]] == null) {
 							if (for_set != null) {
-								Bot new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, objects);
-								new_bot.commands = for_set;
+								Bot new_bot;
+								new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, objects);
+								new_bot.self = new_bot;
+								for (int i = 0; i < 64 + 3; i++) {
+									new_bot.commands[i] = for_set[i];
+								}
 								objects.add(new_bot);
 								Map[botpos[0]][botpos[1]] = new_bot;
 							}
@@ -453,14 +493,16 @@ public class World extends JPanel{
 				botpos[0] = e.getX() / 10;
 				botpos[1] = e.getY() / 10;
 				if (mouse == 1) {//set
-					if (for_set != null) {
-						if (Map[botpos[0]][botpos[1]] == null) {
-							if (for_set != null) {
-								Bot new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, objects);
-								new_bot.commands = for_set;
-								objects.add(new_bot);
-								Map[botpos[0]][botpos[1]] = new_bot;
+					if (Map[botpos[0]][botpos[1]] == null) {
+						if (for_set != null) {
+							Bot new_bot;
+							new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, objects);
+							new_bot.self = new_bot;
+							for (int i = 0; i < 64 + 3; i++) {
+								new_bot.commands[i] = for_set[i];
 							}
+							objects.add(new_bot);
+							Map[botpos[0]][botpos[1]] = new_bot;
 						}
 					}
 				}else if (mouse == 2) {//remove
@@ -482,7 +524,7 @@ public class World extends JPanel{
 				ListIterator<Bot> bot_iterator = objects.listIterator();
 				while (bot_iterator.hasNext()) {
 					Bot next_bot = bot_iterator.next();
-					next_bot.Update(bot_iterator);
+					next_bot.Update(bot_iterator, steps);
 					if (selection != null) {
 						if (next_bot.xpos == selection.xpos && next_bot.ypos == selection.ypos) {
 							if (next_bot != selection) {
@@ -502,7 +544,7 @@ public class World extends JPanel{
 				}
 				if (selection != null) {
 					int[] pos = {selection.xpos, selection.ypos};
-					if (selection.killed == 1 || !find_map_pos(pos, 0) || selection.state != 0){
+					if (selection.killed == 1 || Map[pos[0]][pos[1]] == null){
 						selection = null;
 						save_button.setEnabled(false);
 						show_brain_button.setEnabled(false);
@@ -601,7 +643,7 @@ public class World extends JPanel{
 	private class save_bot implements ActionListener{
 		public void actionPerformed(ActionEvent e) {
 			String txt = "";
-			for (int i = 0; i < 64; i++) {
+			for (int i = 0; i < 64 + 3; i++) {
 				txt += String.valueOf(selection.commands[i]) + " ";
 			}
 			try {
@@ -628,8 +670,8 @@ public class World extends JPanel{
 	            bufferedReader.close();
 	            
 	            String[] l = line.split(" ");
-	            for_set = new int[64];
-	            for (int i = 0; i < 64; i++) {
+	            for_set = new int[64 + 3];
+	            for (int i = 0; i < 64 + 3; i++) {
 	            	for_set[i] = Integer.parseInt(l[i]);
 	            }
 	        } catch (IOException ex) {
@@ -651,30 +693,31 @@ public class World extends JPanel{
 	            String[] l = line.split(";");
 	            steps = Integer.parseInt(l[0]);
 	            objects = new ArrayList<Bot>();
-	    		Map = new Bot[162][108];//0 - none, 1 - bot, 2 - organics
+	    		Map = new Bot[world_scale[0]][world_scale[1]];//0 - none, 1 - bot, 2 - organics
 	    		
 	    		for (int i = 1; i < l.length; i++) {
 	    			String[] bot_data = l[i].split(":");
-	    			Bot new_bot = new Bot(
+	    			Bot new_bot;
+	    			new_bot = new Bot(
 	    				Integer.parseInt(bot_data[3]),
 	    				Integer.parseInt(bot_data[4]),
-	    				new Color(Integer.parseInt(bot_data[11]), Integer.parseInt(bot_data[12]), Integer.parseInt(bot_data[13])),
+	    				new Color(Integer.parseInt(bot_data[10]), Integer.parseInt(bot_data[11]), Integer.parseInt(bot_data[12])),
 	    				Integer.parseInt(bot_data[0]),
 	    				Map,
 	    				objects
 	    			);
+	    			new_bot.self = new_bot;
 	    			new_bot.age = Integer.parseInt(bot_data[1]);
 	    			new_bot.minerals = Integer.parseInt(bot_data[2]);
 	    			new_bot.rotate = Integer.parseInt(bot_data[5]);
 	    			new_bot.state = Integer.parseInt(bot_data[6]);
-	    			new_bot.mimicry_time = Integer.parseInt(bot_data[7]);
-	    			new_bot.c_red = Integer.parseInt(bot_data[8]);
-	    			new_bot.c_green = Integer.parseInt(bot_data[9]);
-	    			new_bot.c_blue = Integer.parseInt(bot_data[10]);
-	    			new_bot.index = Integer.parseInt(bot_data[14]);
-	    			new_bot.killed = Integer.parseInt(bot_data[15]);
+	    			new_bot.c_red = Integer.parseInt(bot_data[7]);
+	    			new_bot.c_green = Integer.parseInt(bot_data[8]);
+	    			new_bot.c_blue = Integer.parseInt(bot_data[9]);
+	    			new_bot.index = Integer.parseInt(bot_data[13]);
+	    			new_bot.killed = Integer.parseInt(bot_data[14]);
 	    			for (int j = 0; j < 64; j++) {
-	    				new_bot.commands[j] = Integer.parseInt(bot_data[16 + j]);;
+	    				new_bot.commands[j] = Integer.parseInt(bot_data[15 + j]);;
 	    			}
 	    			Map[Integer.parseInt(bot_data[3])][Integer.parseInt(bot_data[4])] = new_bot;
 	    			objects.add(new_bot);
@@ -689,7 +732,7 @@ public class World extends JPanel{
 		public void actionPerformed(ActionEvent e) {
 			String txt = "";
 			txt += String.valueOf(steps) + ";";
-			for(Bot b: objects) {//bot length - 80
+			for(Bot b: objects) {//bot length - 79
 				txt += String.valueOf(b.energy) + ":";//0
 				txt += String.valueOf(b.age) + ":";//1
 				txt += String.valueOf(b.minerals) + ":";//2
@@ -697,16 +740,15 @@ public class World extends JPanel{
 				txt += String.valueOf(b.ypos) + ":";//4
 				txt += String.valueOf(b.rotate) + ":";//5
 				txt += String.valueOf(b.state) + ":";//6
-				txt += String.valueOf(b.mimicry_time) + ":";//7
-				txt += String.valueOf(b.c_red) + ":";//8
-				txt += String.valueOf(b.c_green) + ":";//9
-				txt += String.valueOf(b.c_blue) + ":";//10
-				txt += String.valueOf(b.color.getRed()) + ":";//11
-				txt += String.valueOf(b.color.getGreen()) + ":";//12
-				txt += String.valueOf(b.color.getBlue()) + ":";//13
-				txt += String.valueOf(b.index) + ":";//14
-				txt += String.valueOf(b.killed) + ":";//15
-				for (int i = 0; i < 64; i++) {//16 - 79
+				txt += String.valueOf(b.c_red) + ":";//7
+				txt += String.valueOf(b.c_green) + ":";//8
+				txt += String.valueOf(b.c_blue) + ":";//9
+				txt += String.valueOf(b.color.getRed()) + ":";//10
+				txt += String.valueOf(b.color.getGreen()) + ":";//11
+				txt += String.valueOf(b.color.getBlue()) + ":";//12
+				txt += String.valueOf(b.index) + ":";//13
+				txt += String.valueOf(b.killed) + ":";//14
+				for (int i = 0; i < 64; i++) {//15 - 78
 					txt += String.valueOf(b.commands[i]) + ":";
 				}
 				txt += ";";
@@ -727,7 +769,7 @@ public class World extends JPanel{
 	private class open_draw_types implements ActionListener{
 		public void actionPerformed(ActionEvent e) {
 			remove_main();
-			add(mimicry_button);
+			add(relatives_button);
 			add(clans_button);
 			add(close_draw_types_button);
 			menu = 1;
@@ -736,7 +778,7 @@ public class World extends JPanel{
 	private class close_draw_types implements ActionListener{
 		public void actionPerformed(ActionEvent e) {
 			add_main();
-			remove(mimicry_button);
+			remove(relatives_button);
 			remove(clans_button);
 			remove(close_draw_types_button);
 			menu = 0;
