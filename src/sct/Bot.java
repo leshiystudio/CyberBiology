@@ -19,7 +19,7 @@ public class Bot{
 	public int minerals = 0;//минералы
 	public int killed = 0;//убит ли бот?
 	public Bot[][] map;//ссылка на карту
-	public int[] commands = new int[67];
+	public int[] commands = new int[64 + 13];
 	public int index = 0;//индекс
 	public int age = 1000;//сколько осталось жить
 	public int state = 0;//бот или органика
@@ -35,28 +35,16 @@ public class Bot{
 		{-1, 0},
 		{-1, -1}
 	};
-	private int[] minerals_list = {//сколько бот получит минералов
-		1,
-		2,
-		3
-	};
-	private int[] photo_list = {//сколько бот получит энергии от фотосинтеза
-		13,
-		10,
-		8,
-		6,
-		5,
-		4
-	};
+	private int[] minerals_list = {1, 2, 3};//сколько бот получит минералов
+	private int[] photo_list = {13, 10, 8, 6, 5, 4};//сколько бот получит энергии от фотосинтеза
 	//private int[] world_scale = {324, 216};
 	private int[] world_scale = {162, 108};//размер мира
 	private int predators_draw_type = 2;//вариант режима отрисовки хищников
 	public int c_red;//красный в режиме отрисовки хищников
 	public int c_green;//зеленый в режиме отрисовки хищников
 	public int c_blue;//синий в режиме отрисовки хищников
-	public boolean is_attacked = false;//для прерываний
-	public boolean is_share_with_me = false;//для прерываний
-	public int interruption = -1;//выполняется ли сецчас прерывание
+	public boolean[] interruptions_list = {false, false, false, false, false, false, false, false, false, false, false, false, false};
+	public int interruption = -1;//выполняется ли сейчас прерывание
 	public Bot enr_chain_next = null;//следующий в цепочке
 	public Bot enr_chain_prev = null;//предыдущий в цепочке
 	public Bot self;//я
@@ -69,7 +57,7 @@ public class Bot{
 		energy = new_energy;
 		objects = new_objects;
 		map = new_map;
-		for (int i = 0; i < 67; i++) {
+		for (int i = 0; i < 64 + 13; i++) {
 			commands[i] = rand.nextInt(64);
 		}
 		if (predators_draw_type == 0 || predators_draw_type == 2) {
@@ -212,17 +200,6 @@ public class Bot{
 				if (minerals > 1000) {//ограничитель минералов
 					minerals = 1000;
 				}
-				if (interruption == -1) {//прерывания(если бот атакован или с ним поделились энергией, выполняется прерывание. Индекс бота сохраняется, и устанавливается в значение из генов прерывания(они в геноме после мозга). После выполнения завершающей команды индекс восстанавливается.)
-					if (is_attacked) {//если атакован
-						is_attacked = false;
-						interruption = index;
-						index = commands[64];
-					}else if (is_share_with_me) {//если со мной делятся энергией
-						is_share_with_me = false;
-						interruption = index;
-						index = commands[65];
-					}
-				}
 				enr_chain_distribution();//распределение энергии в цепочке
 				//если сосед по цепочке помер, а ссылки не стерлись, стереть их
 				if (enr_chain_next != null && (enr_chain_next.state == 1 || enr_chain_next.killed == 1)) {
@@ -255,6 +232,8 @@ public class Bot{
 					energy += photo_list[sector];
 					int en = photo_list[sector];
 					go_green(en);//зеленеем
+				}else {
+					interruptions_list[2] = true;//если неудачно - выполняется прерывание
 				}
 				next_command_for_stop(1);
 				break;//завершающая
@@ -263,10 +242,12 @@ public class Bot{
 					minerals -= 4;
 					energy += 16;
 					go_blue(16);//синеем
-				}else {
+				}else if (minerals > 0){
 					energy += minerals * 4;
 					go_blue(minerals * 4);//синеем
 					minerals = 0;
+				}else {//если нет минералов, выполняется прерывание
+					interruptions_list[3] = true;//если неудачно - выполняется прерывание
 				}
 				next_command_for_stop(1);
 				break;//завершающая
@@ -278,11 +259,15 @@ public class Bot{
 					}else {//или из бота, если параметр > 31
 						rot = rotate;
 					}
-					int sens = move(rot);
-					if (sens == 1) {//если удачно
+					boolean sens = move(rot);
+					if (sens) {//если удачно
 						energy -= 4;
 						//delete_enr_chain();
+					}else {
+						interruptions_list[4] = true;//если неудачно - выполняется прерывание
 					}
+				}else {//
+					interruptions_list[4] = true;//если неудачно - выполняется прерывание
 				}
 				next_command_for_stop(2);
 				break;//завершающая
@@ -293,7 +278,10 @@ public class Bot{
 				}else {//или из бота, если параметр > 31
 					rot = rotate;
 				}
-				attack(rot, commands[(index + 2) % 64] + 1);
+				boolean sens = attack(rot, commands[(index + 2) % 64] + 1);
+				if (!sens) {
+					interruptions_list[5] = true;//если неудачно - выполняется прерывание
+				}
 				//attack2(rot);
 				next_command_for_stop(3);
 				break;//завершающая
@@ -304,7 +292,10 @@ public class Bot{
 				}else {//или из бота, если параметр > 31
 					rot = rotate;
 				}
-				multiply(rot, 0, iterator);
+				boolean sens = multiply(rot, 0, iterator);
+				if (!sens) {
+					interruptions_list[6] = true;//если неудачно - выполняется прерывание
+				}
 				next_command_for_stop(2);
 				break;//завершающая
 			}else if (command == 7 || command == 8) {//отдать ресурсы (шанс команды увеличен)
@@ -314,7 +305,10 @@ public class Bot{
 				}else {//или из бота, если параметр > 31
 					rot = rotate;
 				}
-				give(rot);
+				boolean sens = give(rot);
+				if (!sens) {
+					interruptions_list[7] = true;//если неудачно - выполняется прерывание
+				}
 				next_command_for_stop(2);
 				break;//завершающая
 			}else if (command == 9 || command == 10) {//равномерное распределение ресурсов (шанс команды увеличен)
@@ -324,7 +318,10 @@ public class Bot{
 				}else {//или из бота, если параметр > 31
 					rot = rotate;
 				}
-				give2(rot);
+				boolean sens = give2(rot);
+				if (!sens) {
+					interruptions_list[8] = true;//если неудачно - выполняется прерывание
+				}
 				next_command_for_stop(2);
 				break;//завершающая
 			//
@@ -409,11 +406,26 @@ public class Bot{
 					index = commands[(index + 3) % 64];
 				}
 			}else if (command == 22) {//сколько энергии у соседа
-				index = commands[(index + 2 + neighbour_param(rotate, 0, commands[(index + 1) % 64] * 15)) % 64];
+				int sens = neighbour_param(rotate, 0, commands[(index + 1) % 64] * 15);
+				if (sens != 2) {
+					index = commands[(index + 2 + sens) % 64];
+				}else {
+					interruptions_list[9] = true;//если неудачно - выполняется прерывание
+				}
 			}else if (command == 23) {//сколько минералов у соседа
-				index = commands[(index + 2 + neighbour_param(rotate, 1, commands[(index + 1) % 64] * 15)) % 64];
+				int sens = neighbour_param(rotate, 1, commands[(index + 1) % 64] * 15);
+				if (sens != 2) {
+					index = commands[(index + 2 + sens) % 64];
+				}else {
+					interruptions_list[9] = true;//если неудачно - выполняется прерывание
+				}
 			}else if (command == 24) {//какой возраст соседа
-				index = commands[(index + 2 + neighbour_param(rotate, 2, commands[(index + 1) % 64] * 15)) % 64];
+				int sens = neighbour_param(rotate, 2, commands[(index + 1) % 64] * 15);
+				if (sens != 2) {
+					index = commands[(index + 2 + sens) % 64];
+				}else {
+					interruptions_list[9] = true;//если неудачно - выполняется прерывание
+				}
 			}else if (command == 25) {//какое мое направление
 				index = commands[(index + rotate + 1) % 64];//переходим по n переходу, где n - направление бота
 			//
@@ -472,7 +484,10 @@ public class Bot{
 				}else {//или из бота, если параметр > 31
 					rot = rotate;
 				}
-				copy_color(rot);
+				boolean sens = copy_color(rot);
+				if (!sens) {
+					interruptions_list[10] = true;//если неудачно - выполняется прерывание
+				}
 				energy -= 10;
 				next_command_for_stop(2);
 				break;//завершающая
@@ -484,12 +499,15 @@ public class Bot{
 				}else {
 					color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
 				}
-				commands[rand.nextInt(64 + 3)] = rand.nextInt(64);
+				commands[rand.nextInt(64 + 13)] = rand.nextInt(64);
 				next_command_for_stop(1);
 				break;//завершающая
 			}else if (command == 34) {//мутация соседа
 				//бот мутирует соседа
-				neighbour_mutate(rotate);
+				boolean sens = neighbour_mutate(rotate);
+				if (!sens) {
+					interruptions_list[11] = true;//если неудачно - выполняется прерывание
+				}
 				next_command_for_stop(1);
 				break;//завершающая
 			}else if (command == 35) {//самоубийство
@@ -513,7 +531,10 @@ public class Bot{
 				}else {//или из бота, если параметр > 31
 					rot = rotate;
 				}
-				multiply(rot, 1, iterator);
+				boolean sens = multiply(rot, 1, iterator);
+				if (!sens) {
+					interruptions_list[12] = true;//если неудачно - выполняется прерывание
+				}
 				next_command_for_stop(2);
 				break;//завершающая
 			}else if (command == 38) {//какая моя позиция в энергетической многоклеточной цепочке
@@ -527,6 +548,286 @@ public class Bot{
 			}else {//безусловный переход
 				index += command;
 				index %= 64;
+			}
+		}
+	}
+	//функции команд генома
+	public boolean neighbour_mutate(int rot) {//мутация соседа
+		int[] pos = get_rotate_position(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] != null) {
+				if (map[pos[0]][pos[1]].state == 0) {//если на карте бот
+					Bot b = map[pos[0]][pos[1]];
+					if (b.killed == 0) {
+						if (rand.nextInt(100) == 0) {//меняем боту цвет
+							b.color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
+						}else {
+							b.color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
+						}
+						b.commands[rand.nextInt(64 + 13)] = rand.nextInt(64);//меняем мозг
+						return(true);//успешно
+					}
+				}
+			}
+		}
+		return(false);//нет
+	}
+	public int neighbour_param(int rot, int type, int ind) {//сколько чего - либо у соседа
+		int[] pos = get_rotate_position(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] != null) {
+				Bot b = map[pos[0]][pos[1]];
+				if (b.killed == 0) {
+					int np = 0;
+					if (type == 0) {//энергии
+						np = b.energy;
+					}else if (type == 1) {//минералов
+						np = b.minerals;
+					}else if (type == 2) {//возраста
+						np = b.age;
+					}
+					if (np >= ind) {//если данных больше параметра, вернуть 0, иначе вернуть 1(параметр сразу умножается на 15)
+						return(0);
+					}else {
+						return(1);
+					}
+				}
+			}else {//если нет соседа, ошибка и все остальное, вернуть 2
+				return(2);
+			}
+		}else {
+			return(2);
+		}
+		return(2);
+	}
+	public boolean copy_color(int rot) {//скопировать цвет
+		int[] pos = get_rotate_position(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] != null) {
+				if (map[pos[0]][pos[1]].state == 0) {//если есть сосед, копируем его цвет
+					color = new Color(map[pos[0]][pos[1]].color.getRed(), map[pos[0]][pos[1]].color.getGreen(), map[pos[0]][pos[1]].color.getBlue());
+					return(true);//успешно
+				}
+			}
+		}
+		return(false);//нет
+	}
+	public int see(int rot) {//посмотреть
+		int[] pos = get_rotate_position(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] == null) {
+				return(1);//если ничего
+			}else if (map[pos[0]][pos[1]].state == 0) {//если бот
+				Bot b = map[pos[0]][pos[1]];
+				if (b != null) {
+					if (is_relative(color, b.color)) {
+						return(3);//если родственник
+					}else {
+						return(2);//если враг
+					}
+				}else {
+					return(1);//если ничего
+				}
+			}else if (map[pos[0]][pos[1]].state != 0) {
+				return(4);//если органика
+			}
+		}else {
+			return(0);//если граница
+		}
+		return(0);//если ошибка
+	}
+	public int see2(int rot) {//посмотреть на 2 клетки
+		int[] pos = get_rotate_position2cells(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] == null) {
+				return(1);//если ничего
+			}else if (map[pos[0]][pos[1]].state == 0) {//если бот
+				Bot b = map[pos[0]][pos[1]];
+				if (b != null) {
+					if (is_relative(color, b.color)) {
+						return(3);//если родственник
+					}else {
+						return(2);//если враг
+					}
+				}else {
+					return(1);//если ничего
+				}
+			}else if (map[pos[0]][pos[1]].state != 0) {
+				return(4);//если органика
+			}
+		}else {
+			return(0);//если граница
+		}
+		return(0);//если ошибка
+	}
+	public boolean give(int rot) {//отдать часть энергии соседу
+		int[] pos = get_rotate_position(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] != null) {
+				if (map[pos[0]][pos[1]].state == 0) {//если есть сосед
+					Bot relative = map[pos[0]][pos[1]];
+					if (relative.killed == 0) {//если сосед не мертв
+						relative.interruptions_list[1] = true;//ставим флаг прерывания
+						relative.energy += energy / 4;//отдать соседу 1/4 энергии и минералов
+						relative.minerals += minerals / 4;
+						energy -= energy / 4;
+						minerals -= minerals / 4;
+						return(true);//успешно
+					}
+				}
+			}
+		}
+		return(false);//нет
+	}
+	public boolean give2(int rot) {//равномерное распределение ресурсов
+		int[] pos = get_rotate_position(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] != null) {
+				if (map[pos[0]][pos[1]].state == 0) {//если есть сосед
+					Bot relative = map[pos[0]][pos[1]];
+					if (relative.killed == 0) {//если сосед не мертв
+						relative.interruptions_list[1] = true;//ставим флаг прерывания
+						int enr = relative.energy + energy;//энергия и минералы распределяются равномерно
+						int mnr = relative.minerals + minerals;
+						relative.energy = enr / 2;
+						relative.minerals = mnr / 2;
+						energy = enr / 2;
+						minerals = mnr / 2;
+						return(true);//успешно
+					}
+				}
+			}
+		}
+		return(false);//нет
+	}
+	public boolean attack2(int rot) {//убить
+		int[] pos = get_rotate_position(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] != null) {//если есть сосед
+				Bot victim = map[pos[0]][pos[1]];
+				if (victim.killed == 0) {
+					victim.killed = 1;//сосед убит
+					energy += victim.energy;//едим его энергию
+					map[pos[0]][pos[1]] = null;//чистим карту
+					victim.delete_enr_chain();//удаляем соседу связи в цепочке
+					go_red(victim.energy);//краснеем
+					return(true);//успешно
+				}
+			}
+		}
+		return(false);//нет
+	}
+	public boolean attack(int rot, int strength) {//укусить
+		int[] pos = get_rotate_position(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] != null) {//если есть сосед
+				Bot victim = map[pos[0]][pos[1]];
+				if (victim.killed == 0) {
+					int en = 0;
+					if (victim.energy >= strength) {//если у соседа достаточно энергии, забрать часть себе
+						energy += strength;
+						victim.energy -= strength;
+						en = strength;
+					}else {//если у соседа мало энергии, он умирает
+						energy += victim.energy;
+						en = victim.energy;
+						victim.energy = 0;
+						victim.killed = 1;
+						map[pos[0]][pos[1]] = null;
+						victim.delete_enr_chain();
+					}
+					go_red(en);//краснеем
+					if (victim.state == 0) {//ставим флаг прерывания
+						victim.interruptions_list[0] = true;
+					}
+					return(true);//успешно
+				}
+			}
+		}
+		return(false);//нет
+	}
+	public boolean move(int rot) {//двигаться
+		int[] pos = get_rotate_position(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] == null) {//если можно походить
+				map[xpos][ypos] = null;//сбросить текущую позицию
+				xpos = pos[0];//ставим новую позицию
+				ypos = pos[1];
+				x = xpos * 10;
+				y = ypos * 10;
+				map[xpos][ypos] = self;//поставить себя в карту
+				return(true);//успешно
+			}
+		}
+		return(false);//нет
+	}
+	public boolean multiply(int rot, int chain, ListIterator<Bot> iterator) {//деление
+		int[] pos = get_rotate_position(rot);
+		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+			if (map[pos[0]][pos[1]] == null) {//если можно поделиться
+				energy -= 150;//деление тратит 150 энергии
+				if (energy <= 0) {//если столько нет, бот умрет
+					killed = 1;
+					map[xpos][ypos] = null;
+				}else { //если энергии хватает
+					Color new_color;//цвет нового бота
+					if (rand.nextInt(100) == 0) {//немного меняем(с шансом 1/100 - полностью)
+						new_color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
+					}else {
+						new_color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
+					}
+					if (rand.nextInt(100) == 0) {//меняем свой цвет
+						color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
+					}else {
+						color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
+					}
+					//копируем мозг
+					int[] new_brain = new int[64 + 13];
+					for (int i = 0; i < 64 + 13; i++) {
+						new_brain[i] = commands[i];
+					}
+					//
+					if (rand.nextInt(4) == 0) {//мутация потомка
+						new_brain[rand.nextInt(64 + 13)] = rand.nextInt(64);
+					}
+					if (rand.nextInt(4) == 0) {//мутация предка
+						commands[rand.nextInt(64 + 13)] = rand.nextInt(64);
+					}
+					//
+					Bot new_bot;//новый бот
+					new_bot = new Bot(pos[0], pos[1], new_color, energy / 2, map, objects);
+					new_bot.self = new_bot;//записываем потомка в потомка :0
+					new_bot.minerals = minerals / 2;//энергия и минералы равномерно распределяются
+					energy /= 2;
+					minerals /= 2;
+					new_bot.commands = new_brain;//мозг нового бота
+					new_bot.starting_color = starting_color;//клан
+					map[pos[0]][pos[1]] = new_bot;//пускаем потомка в мир
+					iterator.add(new_bot);
+					//добавление потомка в цепочку(только, если chain == 1)
+					if (enr_chain_next == null && chain == 1) {//если нет ссылки на следующего
+						enr_chain_next = new_bot;//добавляем
+						new_bot.enr_chain_prev = self;
+					}else if (enr_chain_prev == null && chain == 1) {//если нет ссылки на предыдущего
+						enr_chain_prev = new_bot;//добавляем
+						new_bot.enr_chain_next = self;
+					}
+					//иначе бот будет свободным
+					return(true);//успешно
+				}
+			}
+		}
+		return(false);//нет
+	}
+	//технические фукнкции
+	public void interruptions() {//обработка прерываний
+		if (interruption == -1) {//прерывания(если выполнилось нужное условие, выполняется прерывание. Индекс бота сохраняется, и устанавливается в значение из генов прерывания(они в геноме после мозга). После выполнения завершающей команды индекс восстанавливается.)
+			for (int i = 0; i < 13; i++) {
+				if (interruptions_list[i]) {
+					interruption = index;
+					index = commands[64 + i];
+					break;
+				}
 			}
 		}
 	}
@@ -565,56 +866,11 @@ public class Bot{
 		if (interruption > -1) {
 			index = interruption;
 			interruption = -1;
+			interruptions_list = new boolean[13];
 		}else {
 			index += count;
 			index %= 64;
 		}
-	}
-	public void neighbour_mutate(int rot) {//мутация соседа
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				if (map[pos[0]][pos[1]].state == 0) {//если на карте бот
-					Bot b = map[pos[0]][pos[1]];
-					if (b != null) {
-						if (rand.nextInt(100) == 0) {//меняем боту цвет
-							b.color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
-						}else {
-							b.color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
-						}
-						b.commands[rand.nextInt(64 + 3)] = rand.nextInt(64);//меняем мозг
-					}
-				}
-			}
-		}
-	}
-	public int neighbour_param(int rot, int type, int ind) {//сколько чего - либо у соседа
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				Bot b = map[pos[0]][pos[1]];
-				if (b != null) {
-					int np = 0;
-					if (type == 0) {//энергии
-						np = b.energy;
-					}else if (type == 1) {//минералов
-						np = b.minerals;
-					}else if (type == 2) {//возраста
-						np = b.age;
-					}
-					if (np >= ind) {//если данных больше параметра, вернуть 0, иначе вернуть 1(параметр сразу умножается на 15)
-						return(0);
-					}else {
-						return(1);
-					}
-				}
-			}else {//если нет соседа, ошибка и все остальное, вернуть 2
-				return(2);
-			}
-		}else {
-			return(2);
-		}
-		return(2);
 	}
 	public void go_red(int en) {//краснеть
 		if (predators_draw_type == 0) {
@@ -667,142 +923,6 @@ public class Bot{
 			c_blue += en;
 		}
 	}
-	public void copy_color(int rot) {//скопировать цвет
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				if (map[pos[0]][pos[1]].state == 0) {//если есть сосед, копируем его цвет
-					color = new Color(map[pos[0]][pos[1]].color.getRed(), map[pos[0]][pos[1]].color.getGreen(), map[pos[0]][pos[1]].color.getBlue());
-				}
-			}
-		}
-	}
-	public int see(int rot) {//посмотреть
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] == null) {
-				return(1);//если ничего
-			}else if (map[pos[0]][pos[1]].state == 0) {//если бот
-				Bot b = map[pos[0]][pos[1]];
-				if (b != null) {
-					if (is_relative(color, b.color)) {
-						return(3);//если родственник
-					}else {
-						return(2);//если враг
-					}
-				}else {
-					return(1);//если ничего
-				}
-			}else if (map[pos[0]][pos[1]].state != 0) {
-				return(4);//если органика
-			}
-		}else {
-			return(0);//если граница
-		}
-		return(0);//если ошибка
-	}
-	public int see2(int rot) {//посмотреть на 2 клетки
-		int[] pos = get_rotate_position2cells(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] == null) {
-				return(1);//если ничего
-			}else if (map[pos[0]][pos[1]].state == 0) {//если бот
-				Bot b = map[pos[0]][pos[1]];
-				if (b != null) {
-					if (is_relative(color, b.color)) {
-						return(3);//если родственник
-					}else {
-						return(2);//если враг
-					}
-				}else {
-					return(1);//если ничего
-				}
-			}else if (map[pos[0]][pos[1]].state != 0) {
-				return(4);//если органика
-			}
-		}else {
-			return(0);//если граница
-		}
-		return(0);//если ошибка
-	}
-	public void give(int rot) {//отдать часть энергии соседу
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				if (map[pos[0]][pos[1]].state == 0) {//если есть сосед
-					Bot relative = map[pos[0]][pos[1]];
-					if (relative.killed == 0) {//если сосед не мертв
-						relative.is_share_with_me = true;//ставим флаг прерывания
-						relative.energy += energy / 4;//отдать соседу 1/4 энергии и минералов
-						relative.minerals += minerals / 4;
-						energy -= energy / 4;
-						minerals -= minerals / 4;
-					}
-				}
-			}
-		}
-	}
-	public void give2(int rot) {//равномерное распределение ресурсов
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				if (map[pos[0]][pos[1]].state == 0) {//если есть сосед
-					Bot relative = map[pos[0]][pos[1]];
-					if (relative.killed == 0) {//если сосед не мертв
-						relative.is_share_with_me = true;//ставим флаг прерывания
-						int enr = relative.energy + energy;//энергия и минералы распределяются равномерно
-						int mnr = relative.minerals + minerals;
-						relative.energy = enr / 2;
-						relative.minerals = mnr / 2;
-						energy = enr / 2;
-						minerals = mnr / 2;
-					}
-				}
-			}
-		}
-	}
-	public void attack2(int rot) {//убить
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				Bot victim = map[pos[0]][pos[1]];
-				if (victim != null) {//если есть сосед
-					victim.killed = 1;//сосед убит
-					energy += victim.energy;//едим его энергию
-					map[pos[0]][pos[1]] = null;//чистим карту
-					victim.delete_enr_chain();//удаляем соседу связи в цепочке
-					go_red(victim.energy);//краснеем
-				}
-			}
-		}
-	}
-	public void attack(int rot, int strength) {//укусить
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				Bot victim = map[pos[0]][pos[1]];
-				if (victim != null) {//если есть сосед
-					int en = 0;
-					if (victim.energy >= strength) {//если у соседа достаточно энергии, забрать часть себе
-						energy += strength;
-						victim.energy -= strength;
-						en = strength;
-					}else {//если у соседа мало энергии, он умирает
-						energy += victim.energy;
-						en = victim.energy;
-						victim.energy = 0;
-						victim.killed = 1;
-						map[pos[0]][pos[1]] = null;
-						victim.delete_enr_chain();
-					}
-					go_red(en);//краснеем
-					if (victim.state == 0) {//ставим флаг прерывания
-						victim.is_attacked = true;
-					}
-				}
-			}
-		}
-	}
 	public boolean is_relative(Color color1, Color color2) {//являются ли боты родственниками(если все цветовые каналы 2 бота находятся в диапазоне от -20 до 20 относительно моего цвета)
 		boolean is_red = (color1.getRed() - 20 < color2.getRed()) && (color1.getRed() + 20 > color2.getRed());
 		boolean is_green = (color1.getGreen() - 20 < color2.getGreen()) && (color1.getGreen() + 20 > color2.getGreen());
@@ -831,81 +951,10 @@ public class Bot{
 		}
 		return(pos);
 	}
-	public int move(int rot) {//двигаться
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] == null) {//если можно походить
-				map[xpos][ypos] = null;//сбросить текущую позицию
-				xpos = pos[0];//ставим новую позицию
-				ypos = pos[1];
-				x = xpos * 10;
-				y = ypos * 10;
-				map[xpos][ypos] = self;//поставить себя в карту
-				return(1);//успешно
-			}
-		}
-		return(0);//нет
-	}
-	public void multiply(int rot, int chain, ListIterator<Bot> iterator) {//деление
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] == null) {//если можно поделиться
-				energy -= 150;//деление тратит 150 энергии
-				if (energy <= 0) {//если столько нет, бот умрет
-					killed = 1;
-					map[xpos][ypos] = null;
-				}else { //если энергии хватает
-					Color new_color;//цвет нового бота
-					if (rand.nextInt(100) == 0) {//немного меняем(с шансом 1/100 - полностью)
-						new_color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
-					}else {
-						new_color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
-					}
-					if (rand.nextInt(100) == 0) {//меняем свой цвет
-						color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
-					}else {
-						color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
-					}
-					//копируем мозг
-					int[] new_brain = new int[64 + 3];
-					for (int i = 0; i < 64 + 3; i++) {
-						new_brain[i] = commands[i];
-					}
-					//
-					if (rand.nextInt(4) == 0) {//мутация потомка
-						new_brain[rand.nextInt(64 + 3)] = rand.nextInt(64);
-					}
-					if (rand.nextInt(4) == 0) {//мутация предка
-						commands[rand.nextInt(64 + 3)] = rand.nextInt(64);
-					}
-					//
-					Bot new_bot;//новый бот
-					new_bot = new Bot(pos[0], pos[1], new_color, energy / 2, map, objects);
-					new_bot.self = new_bot;//записываем потомка в потомка :0
-					new_bot.minerals = minerals / 2;//энергия и минералы равномерно распределяются
-					energy /= 2;
-					minerals /= 2;
-					new_bot.commands = new_brain;//мозг нового бота
-					new_bot.starting_color = starting_color;//клан
-					map[pos[0]][pos[1]] = new_bot;//пускаем потомка в мир
-					iterator.add(new_bot);
-					//добавление потомка в цепочку(только, если chain == 1)
-					if (enr_chain_next == null && chain == 1) {//если нет ссылки на следующего
-						enr_chain_next = new_bot;//добавляем
-						new_bot.enr_chain_prev = self;
-					}else if (enr_chain_prev == null && chain == 1) {//если нет ссылки на предыдущего
-						enr_chain_prev = new_bot;//добавляем
-						new_bot.enr_chain_next = self;
-					}
-					//иначе бот будет свободным
-				}
-			}
-		}
-	}
 	public int bot_in_sector() {//для фотосинтеза и минералов
 		int sec = ypos / (world_scale[1] / 8);
 		if (sec > 7) {
-			sec = 10;
+			sec = 7;
 		}
 		return(sec);
 	}
