@@ -40,12 +40,10 @@ public class World extends JPanel{
 	int obj_count = 0;//счетчик объектов
 	int org_count = 0;//счетчик органики
 	//
-	String txt;//для отображения названия режима отрисовки
-	String txt2;
-	//
 	int mouse = 0;//функция мыши
 	int menu = 0;//что отображать в панели управления
 	int draw_type = 0;//режим отрисовки
+	int chain_draw_type = 1;//режим отрисовки цепочек
 	//
 	boolean pause = false;//включена ли симуляция?
 	boolean render = true;//включена ли отрисовка?
@@ -81,6 +79,9 @@ public class World extends JPanel{
 	JButton other_button;
 	JButton close_draw_types_button;
 	JButton clans_button;
+	JButton chain_none_button;
+	JButton chain_enr_button;
+	JButton chain_mnr_button;
 	public World() {
 		setLayout(null);
 		timer = new Timer(delay, new BotListener());
@@ -90,32 +91,32 @@ public class World extends JPanel{
 		addMouseMotionListener(new BotListener());
 		//кнопка паузы
 		stop_button.addActionListener(new start_stop());
-		stop_button.setBounds(W - 300, 125, 255, 35);
+		stop_button.setBounds(W - 300, 150, 255, 35);
         add(stop_button);
         //кнопка режима отрисовки хищников
         predators_button = new JButton("Predators");
         predators_button.addActionListener(new change_draw_type(0));
-		predators_button.setBounds(W - 300, 190, 125, 20);
+		predators_button.setBounds(W - 300, 210, 125, 20);
         add(predators_button);
         //кнопка режима отрисовки энергии
         energy_button = new JButton("Energy");
         energy_button.addActionListener(new change_draw_type(2));
-		energy_button.setBounds(W - 170, 190, 125, 20);
+		energy_button.setBounds(W - 170, 210, 125, 20);
         add(energy_button);
         //кнопка режима отрисовки минералов
         minerals_button = new JButton("Minerals");
-		minerals_button.setBounds(W - 300, 215, 125, 20);
+		minerals_button.setBounds(W - 300, 235, 125, 20);
 		minerals_button.addActionListener(new change_draw_type(3));
         add(minerals_button);
         //кнопка режима отрисовки возраста
         age_button = new JButton("Age");
         age_button.addActionListener(new change_draw_type(4));
-		age_button.setBounds(W - 170, 215, 125, 20);
+		age_button.setBounds(W - 170, 235, 125, 20);
         add(age_button);
         //кнопка режима отрисовки цвета
         color_button = new JButton("Color");
         color_button.addActionListener(new change_draw_type(1));
-		color_button.setBounds(W - 300, 240, 125, 20);
+		color_button.setBounds(W - 300, 260, 125, 20);
         add(color_button);
         //кнопка режима отрисовки родственников(не работает)
         relatives_button = new JButton("Relatives");
@@ -125,6 +126,18 @@ public class World extends JPanel{
 		clans_button = new JButton("Clans");
 		clans_button.addActionListener(new change_draw_type(6));
 		clans_button.setBounds(W - 170, 40, 125, 20);
+		//кнопка отключения отображения цепочек
+		chain_none_button = new JButton("No render");
+		chain_none_button.addActionListener(new change_chain_draw_type(0));
+		chain_none_button.setBounds(W - 300, 85, 125, 20);
+		//кнопка отображения энергетических цепочек
+		chain_enr_button = new JButton("Energy chains");
+		chain_enr_button.addActionListener(new change_chain_draw_type(1));
+		chain_enr_button.setBounds(W - 170, 85, 125, 20);
+		//кнопка отображения минеральных цепочек
+		chain_mnr_button = new JButton("Minerals chains");
+		chain_mnr_button.addActionListener(new change_chain_draw_type(2));
+		chain_mnr_button.setBounds(W - 300, 110, 125, 20);
         //кнопка выбора бота
         select_button = new JButton("Select");
         select_button.addActionListener(new select());
@@ -191,7 +204,7 @@ public class World extends JPanel{
         //кнопка открытия выбора дополнительных режимов отрисовки
         other_button = new JButton("Other...");
         other_button.addActionListener(new open_draw_types());
-		other_button.setBounds(W - 170, 240, 125, 20);
+		other_button.setBounds(W - 170, 260, 125, 20);
 		add(other_button);
         //кнопка закрытия выбора дополнительных режимов отрисовки
         close_draw_types_button = new JButton("Close");
@@ -264,7 +277,7 @@ public class World extends JPanel{
 		canvas.fillRect(0, 0, W - 300, 1080);
 		if (render) {//все, для чего нужна включенная отрисовка
 			for(Bot b: objects) {//рисуем ботов
-				b.Draw(canvas, draw_type);
+				b.Draw(canvas, draw_type, chain_draw_type);
 			}
 			//for (int x = 0; x < world_scale[0]; x++) {//для отладки
 			//	for (int y = 0; y < world_scale[1]; y++) {
@@ -288,34 +301,42 @@ public class World extends JPanel{
 			canvas.drawString("version 2.0", W - 300, 40);
 			canvas.drawString("steps: " + String.valueOf(steps), W - 300, 60);
 			canvas.drawString("objects: " + String.valueOf(obj_count) + ", bots: " + String.valueOf(b_count), W - 300, 80);
+			String txt_draw_type = "", txt_chain_draw_type = "", txt_mouse;
 			if (draw_type == 0) {//режим отрисовки
-				txt = "predators view";
+				txt_draw_type = "predators view";
 			}else if (draw_type == 1) {
-				txt = "color view";
+				txt_draw_type = "color view";
 			}else if (draw_type == 2) {
-				txt = "energy view";
+				txt_draw_type = "energy view";
 			}else if (draw_type == 3) {
-				txt = "minerals view";
+				txt_draw_type = "minerals view";
 			}else if (draw_type == 4){
-				txt = "age view";
+				txt_draw_type = "age view";
 			}else if (draw_type == 5) {
-				txt = "virus view";
+				txt_draw_type = "virus view";
 			}else if (draw_type == 6) {
-				txt = "clans view";
+				txt_draw_type = "clans view";
 			}else if (draw_type == 7) {
-				txt = "relatives view";
+				txt_draw_type = "relatives view";
 			}
-			canvas.drawString("render type: " + txt, W - 300, 100);
+			if (chain_draw_type == 0) {//режим отрисовки многоклеточных цепочек
+				txt_chain_draw_type = "no render";
+			}else if (chain_draw_type == 1) {
+				txt_chain_draw_type = "energy chains";
+			}else if (chain_draw_type == 2) {
+				txt_chain_draw_type = "minerals chains";
+			}
+			canvas.drawString("render type: " + txt_draw_type, W - 300, 100);
+			canvas.drawString("chain render type: " + txt_chain_draw_type, W - 300, 120);
 			if (mouse == 0) {
-				txt2 = "select";
+				txt_mouse = "select";
 			}else if (mouse == 1) {
-				txt2 = "set";
+				txt_mouse = "set";
 			}else {
-				txt2 = "remove";
+				txt_mouse = "remove";
 			}
-			canvas.drawString("mouse function: " + txt2, W - 300, 120);
-			canvas.drawString("Render types:", W - 300, 180);
-			canvas.drawString("Selection:", W - 300, 275);
+			canvas.drawString("mouse function: " + txt_mouse, W - 300, 140);
+			canvas.drawString("Render types:", W - 300, 205);
 			canvas.drawString("enter name:", W - 300, 425);
 			canvas.drawString("Mouse functions:", W - 300, 470);
 			canvas.drawString("Load:", W - 300, 510);
@@ -323,13 +344,13 @@ public class World extends JPanel{
 			canvas.drawString("Controls:", W - 300, 600);
 			if (selection != null) {//информация о выбранном боте
 				if (selection.state == 0) {//если бот
-					canvas.drawString("bot", W - 300, 295);
+					canvas.drawString("Selection: bot", W - 300, 295);
 					canvas.drawString("energy: " + String.valueOf(selection.energy) + ", minerals: " + String.valueOf(selection.minerals), W - 300, 315);//сколько энергии и минералов
 					canvas.drawString("age: " + String.valueOf(selection.age), W - 300, 335);//сколько осталось жить
 					canvas.drawString("position: " + "[" + String.valueOf(selection.xpos) + ", " + String.valueOf(selection.ypos) + "]", W - 300, 355);//позиция
 					canvas.drawString("color: " + "(" + String.valueOf(selection.color.getRed()) + ", " + String.valueOf(selection.color.getGreen()) + ", " + String.valueOf(selection.color.getBlue()) + ")", W - 300, 375);//цвет
 				}else if (selection.state == 1) {//если органика
-					canvas.drawString("organics", W - 300, 295);
+					canvas.drawString("Selection: organics", W - 300, 295);
 					canvas.drawString("energy: " + String.valueOf(selection.energy), W - 300, 315);//сколько энергии запасено
 					canvas.drawString("position: " + "[" + String.valueOf(selection.xpos) + ", " + String.valueOf(selection.ypos) + "]", W - 300, 335);//позиция
 				}
@@ -352,7 +373,7 @@ public class World extends JPanel{
 				//	canvas.fillRect(selection.enr_chain_prev.xpos * 10, selection.enr_chain_prev.ypos * 10, 10, 10);
 				//}
 			}else {//если никто не выбран, пишем "none"
-				canvas.drawString("none", W - 300, 295);
+				canvas.drawString("Selection: none", W - 300, 295);
 			}
 			if (sh_brain) {//рисуем мозг бота
 				canvas.setColor(new Color(90, 90, 90));
@@ -369,6 +390,9 @@ public class World extends JPanel{
 		}else {//рисовать интерфейс выбора дополнительного режима отрисовки
 			canvas.setColor(gray);
 			canvas.drawRect(0, 0, W, H);
+			canvas.setColor(new Color(0, 0, 0));//цвет шрифта
+			canvas.setFont(new Font("arial", Font.BOLD, 18));//шрифт
+			canvas.drawString("Chain render types: ", W - 300, 75);
 		}
 		if (rec && steps % 25 == 0) {//запись
 			try {//чтобы не вылетело
@@ -379,7 +403,7 @@ public class World extends JPanel{
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
 				for(Bot b: objects) {
-					b.Draw(g2d, 0);
+					b.Draw(g2d, 0, 1);
 				}
 				g2d.dispose();
 				//режим отрисовки энергии
@@ -388,7 +412,7 @@ public class World extends JPanel{
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
 				for(Bot b: objects) {
-					b.Draw(g2d, 2);
+					b.Draw(g2d, 2, 1);
 				}
 				g2d.dispose();
 				//режим отрисовки цвета
@@ -397,7 +421,7 @@ public class World extends JPanel{
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
 				for(Bot b: objects) {
-					b.Draw(g2d, 1);
+					b.Draw(g2d, 1, 1);
 				}
 				g2d.dispose();
 				//режим отрисовки кланов
@@ -406,7 +430,7 @@ public class World extends JPanel{
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
 				for(Bot b: objects) {
-					b.Draw(g2d, 6);
+					b.Draw(g2d, 6, 1);
 				}
 				g2d.dispose();
 				//сохранение в файл
@@ -422,7 +446,7 @@ public class World extends JPanel{
 	public void newPopulation() {//создать случайную популяцию
 		steps = 0;//сбросить счетчик шагов
 		objects = new ArrayList<Bot>();//сбросить массив с объектами
-		Map = new Bot[world_scale[0]][world_scale[1]];//сбросиь карту
+		Map = new Bot[world_scale[0]][world_scale[1]];//сбросить карту
 		for (int i = 0; i < 1000; i++) {//создать 1000 ботов
 			while(true){//чтобы 2 бота не появились на 1 клетке
 				int x = rand.nextInt(world_scale[0]);//случайная позиция
@@ -578,6 +602,15 @@ public class World extends JPanel{
 		}
 		public void actionPerformed(ActionEvent e) {
 			draw_type = number;
+		}
+	}
+	private class change_chain_draw_type implements ActionListener{//смена режима отрисовки(берется из параметра)
+		int number;
+		private change_chain_draw_type(int new_number){
+			number = new_number;
+		}
+		public void actionPerformed(ActionEvent e) {
+			chain_draw_type = number;
 		}
 	}
 	private class start_stop implements ActionListener{//пауза
@@ -780,6 +813,9 @@ public class World extends JPanel{
 			add(relatives_button);
 			add(clans_button);
 			add(close_draw_types_button);
+			add(chain_none_button);
+			add(chain_enr_button);
+			add(chain_mnr_button);
 			menu = 1;
 		}
 	}
@@ -789,6 +825,9 @@ public class World extends JPanel{
 			remove(relatives_button);
 			remove(clans_button);
 			remove(close_draw_types_button);
+			remove(chain_none_button);
+			remove(chain_enr_button);
+			remove(chain_mnr_button);
 			menu = 0;
 		}
 	}

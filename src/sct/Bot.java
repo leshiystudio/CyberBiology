@@ -48,6 +48,7 @@ public class Bot{
 	public Bot enr_chain_next = null;//следующий в цепочке
 	public Bot enr_chain_prev = null;//предыдущий в цепочке
 	public Bot self;//я
+	public Bot[][] chain = new Bot[2][2];//многоклеточные цепочки. 0 - энергетическая, 1 - минеральная. 0 - следующий, 1 - предыдущий
 	public Bot(int new_xpos, int new_ypos, Color new_color, int new_energy, Bot[][] new_map, ArrayList<Bot> new_objects) {//некоторые данные передаются в конструктор
 		xpos = new_xpos;
 		ypos = new_ypos;
@@ -70,7 +71,7 @@ public class Bot{
 			c_blue = 128;
 		}
 	}
-	public void Draw(Graphics canvas, int draw_type) {
+	public void Draw(Graphics canvas, int draw_type, int chain_draw_type) {
 		if (state == 0) {//рисуем бота
 			canvas.setColor(new Color(0, 0, 0));//черное окаймление
 			canvas.fillRect(x, y, 10, 10);
@@ -121,37 +122,40 @@ public class Bot{
 			}
 			//canvas.fillRect(x, y, 5, 5);
 			canvas.fillRect(x + 1, y + 1, 8, 8);
-			if (enr_chain_next != null || enr_chain_prev != null) {//если бот в цепоке, рисуем на нем квадрат
-				canvas.setColor(new Color(0, 0, 0));
-				canvas.fillRect(x + 3, y + 3, 4, 4);
-			}
 			//рисование связей между ботами
-			if (enr_chain_next != null) {//если есть следующий
-				if (Math.abs(xpos - enr_chain_next.xpos) > 1) {//если расстояние между ботами больше 1(если они по разные стороны мира)
-					int xpos_ = 0;
-					if (xpos - enr_chain_next.xpos > 0) {//если я справа
-						xpos_= enr_chain_next.xpos + 162;
-					}else if (xpos - enr_chain_next.xpos < 0) {//если я слева
-						xpos_= enr_chain_next.xpos - 162;
+			if (chain_draw_type != 0) {//рисуем многоклеточные цепочки
+				int chain_type = chain_draw_type - 1;
+				if (chain[chain_type][0] != null || chain[chain_type][1] != null) {//если бот в цепоке, рисуем на нем квадрат
+					canvas.setColor(new Color(0, 0, 0));
+					canvas.fillRect(x + 3, y + 3, 4, 4);
+				}
+				if (chain[chain_type][0] != null) {//если есть следующий
+					if (Math.abs(xpos - chain[chain_type][0].xpos) > 1) {//если расстояние между ботами больше 1(если они по разные стороны мира)
+						int xpos_ = 0;
+						if (xpos - chain[chain_type][0].xpos > 0) {//если я справа
+							xpos_= chain[chain_type][0].xpos + 162;
+						}else if (xpos - chain[chain_type][0].xpos < 0) {//если я слева
+							xpos_= chain[chain_type][0].xpos - 162;
+						}
+						canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5 + (xpos - xpos_) * 5, chain[chain_type][0].ypos * 10 + 5 + (ypos - chain[chain_type][0].ypos) * 5);
+					}else {//иначе просто рисовать цепочку
+						canvas.drawLine(x + 5, y + 5, chain[chain_type][0].xpos * 10 + 5, chain[chain_type][0].ypos * 10 + 5);
 					}
-					canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5 + (xpos - xpos_) * 5, enr_chain_next.ypos * 10 + 5 + (ypos - enr_chain_next.ypos) * 5);
-				}else {//иначе просто рисовать цепочку
-					canvas.drawLine(x + 5, y + 5, enr_chain_next.xpos * 10 + 5, enr_chain_next.ypos * 10 + 5);
+				}
+				if (chain[chain_type][1] != null) {//если есть предыдущий
+					if (Math.abs(xpos - chain[chain_type][1].xpos) > 1) {//если расстояние между ботами больше 1(если они по разные стороны мира)
+						int xpos_ = 0;
+						if (xpos - chain[chain_type][1].xpos > 0) {//если я справа
+							xpos_= chain[chain_type][1].xpos + 162;
+						}else if (xpos - chain[chain_type][1].xpos < 0) {//если я слева
+							xpos_= chain[chain_type][1].xpos - 162;
+						}
+						canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5 + (xpos - xpos_) * 5, chain[chain_type][1].ypos * 10 + 5 + (ypos - chain[chain_type][1].ypos) * 5);
+					}else {//иначе просто рисовать цепочку
+						canvas.drawLine(x + 5, y + 5, chain[chain_type][1].xpos * 10 + 5, chain[chain_type][1].ypos * 10 + 5);
+					}
 				}
 			}
-			if (enr_chain_prev != null) {//если есть предыдущий
-				if (Math.abs(xpos - enr_chain_prev.xpos) > 1) {//если расстояние между ботами больше 1(если они по разные стороны мира)
-					int xpos_ = 0;
-					if (xpos - enr_chain_prev.xpos > 0) {//если я справа
-						xpos_= enr_chain_prev.xpos + 162;
-					}else if (xpos - enr_chain_prev.xpos < 0) {//если я слева
-						xpos_= enr_chain_prev.xpos - 162;
-					}
-					canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5 + (xpos - xpos_) * 5, enr_chain_prev.ypos * 10 + 5 + (ypos - enr_chain_prev.ypos) * 5);
-				}else {//иначе просто рисовать цепочку
-					canvas.drawLine(x + 5, y + 5, enr_chain_prev.xpos * 10 + 5, enr_chain_prev.ypos * 10 + 5);
-				}
-			} 
 		}else {//рисуем органику
 			//canvas.setColor(new Color(90, 90, 90));
 			//canvas.fillRect(x + 1, y + 1, 3, 3);
@@ -174,14 +178,14 @@ public class Bot{
 	public int Update(ListIterator<Bot> iterator, int steps) {//обновление бота
 		if (killed == 0) {//если бот не мертв
 			if (state == 0) {//бот
-				int sector = bot_in_sector();//для минералов
 				age--;//постареть
+				int sector = bot_in_sector();//для минералов
 				if (sector <= 7 & sector >= 5) {//приход минералов
 					minerals += minerals_list[sector - 5];
 				}
 				update_commands(iterator);//мозг
 				if (energy <= 0) {//если мало энергии, умереть(органика не появляется)
-					delete_enr_chain();//удалить связи в цепочке
+					delete_chain();//удалить связи в цепочке
 					killed = 1;
 					map[xpos][ypos] = null;
 					return(0);
@@ -192,7 +196,7 @@ public class Bot{
 					multiply(rotate, 0, iterator);
 				}
 				if (age <= 0) {//если пора помирать от старости
-					delete_enr_chain();//удалить связи в цепочке
+					delete_chain();//удалить связи в цепочке
 					state = 1;//стать органикой
 					state2 = 2;
 					return(0);
@@ -200,14 +204,8 @@ public class Bot{
 				if (minerals > 1000) {//ограничитель минералов
 					minerals = 1000;
 				}
-				enr_chain_distribution();//распределение энергии в цепочке
-				//если сосед по цепочке помер, а ссылки не стерлись, стереть их
-				if (enr_chain_next != null && (enr_chain_next.state == 1 || enr_chain_next.killed == 1)) {
-					enr_chain_next = null;
-				}
-				if (enr_chain_prev != null && (enr_chain_prev.state == 1 || enr_chain_prev.killed == 1)) {
-					enr_chain_prev = null;
-				}
+				interruptions();
+				update_chain();
 			}else if (state == 1) {//органика тоже бот
 				move(4);//падать
 				if (steps % 3 == 0) {//каждые 3 хода органика тратит энергию
@@ -252,7 +250,7 @@ public class Bot{
 				next_command_for_stop(1);
 				break;//завершающая
 			}else if (command == 4) {//походить
-				if (enr_chain_next == null && enr_chain_prev == null) {//боты в цепочке ходить не могут
+				if (chain[0][0] == null && chain[0][1] == null && chain[1][0] == null && chain[1][1] == null) {//боты в цепочке ходить не могут
 					int rot = commands[(index + 1) % 64];//направление берется из параметра
 					if (rot > 31) {
 						rot %= 8;
@@ -514,7 +512,7 @@ public class Bot{
 				//бот превращается в органику
 				state = 1;
 				state2 = 2;
-				delete_enr_chain();//удалить связи в цепочке
+				delete_chain();//удалить связи в цепочке
 				next_command_for_stop(1);
 				break;//завершающая
 			}else if (command == 36) {//уменьшить возраст
@@ -537,10 +535,24 @@ public class Bot{
 				}
 				next_command_for_stop(2);
 				break;//завершающая
-			}else if (command == 38) {//какая моя позиция в энергетической многоклеточной цепочке
-				if (enr_chain_next == null && enr_chain_prev == null) {//не в цепочке
+			}else if (command == 38) {//поделиться(минеральная многоклеточная цепочка)
+				//бот делится, добавляя потомка в многоклеточную цепочку. Если у бота уже есть 2 связи в цепочке, потомок появляутся свободным
+				int rot = commands[(index + 1) % 64];//направление берется из параметра
+				if (rot > 31) {
+					rot %= 8;
+				}else {//или из бота, если параметр > 31
+					rot = rotate;
+				}
+				boolean sens = multiply(rot, 2, iterator);
+				if (!sens) {
+					interruptions_list[12] = true;//если неудачно - выполняется прерывание
+				}
+				next_command_for_stop(2);
+				break;//завершающая
+			}else if (command == 39) {//какая моя позиция в энергетической многоклеточной цепочке
+				if (chain[0][0] == null && chain[0][1] == null) {//не в цепочке
 					index = commands[(index + 1) % 64];
-				}else if (enr_chain_next != null && enr_chain_prev != null) {//в середине
+				}else if (chain[0][0] != null && chain[0][1] != null) {//в середине
 					index = commands[(index + 2) % 64];
 				}else {//в конце
 					index = commands[(index + 3) % 64];
@@ -709,7 +721,7 @@ public class Bot{
 					victim.killed = 1;//сосед убит
 					energy += victim.energy;//едим его энергию
 					map[pos[0]][pos[1]] = null;//чистим карту
-					victim.delete_enr_chain();//удаляем соседу связи в цепочке
+					victim.delete_chain();//удаляем соседу связи в цепочке
 					go_red(victim.energy);//краснеем
 					return(true);//успешно
 				}
@@ -734,7 +746,7 @@ public class Bot{
 						victim.energy = 0;
 						victim.killed = 1;
 						map[pos[0]][pos[1]] = null;
-						victim.delete_enr_chain();
+						victim.delete_chain();
 					}
 					go_red(en);//краснеем
 					if (victim.state == 0) {//ставим флаг прерывания
@@ -761,7 +773,7 @@ public class Bot{
 		}
 		return(false);//нет
 	}
-	public boolean multiply(int rot, int chain, ListIterator<Bot> iterator) {//деление
+	public boolean multiply(int rot, int chain_type, ListIterator<Bot> iterator) {//деление
 		int[] pos = get_rotate_position(rot);
 		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
 			if (map[pos[0]][pos[1]] == null) {//если можно поделиться
@@ -804,13 +816,15 @@ public class Bot{
 					new_bot.starting_color = starting_color;//клан
 					map[pos[0]][pos[1]] = new_bot;//пускаем потомка в мир
 					iterator.add(new_bot);
-					//добавление потомка в цепочку(только, если chain == 1)
-					if (enr_chain_next == null && chain == 1) {//если нет ссылки на следующего
-						enr_chain_next = new_bot;//добавляем
-						new_bot.enr_chain_prev = self;
-					}else if (enr_chain_prev == null && chain == 1) {//если нет ссылки на предыдущего
-						enr_chain_prev = new_bot;//добавляем
-						new_bot.enr_chain_next = self;
+					//добавление потомка в цепочку(только, если chain_type > 0)
+					if (chain_type != 0) {
+						if (chain[chain_type - 1][0] == null) {//если нет ссылки на следующего
+							chain[chain_type - 1][0] = new_bot;//добавляем
+							new_bot.chain[chain_type - 1][1] = self;
+						}else if (chain[chain_type - 1][1] == null) {//если нет ссылки на предыдущего
+							chain[chain_type - 1][1] = new_bot;//добавляем
+							new_bot.chain[chain_type - 1][0] = self;
+						}
 					}
 					//иначе бот будет свободным
 					return(true);//успешно
@@ -820,6 +834,18 @@ public class Bot{
 		return(false);//нет
 	}
 	//технические фукнкции
+	public void update_chain() {//обновление цепочек
+		chain_distribution();//распределение энергии в цепочке
+		//если сосед по цепочке помер, а ссылки не стерлись, стереть их
+		for (int i = 0; i < 2; i++) {
+			if (chain[i][0] != null && (chain[i][0].state == 1 || chain[i][0].killed == 1)) {
+				chain[i][0] = null;
+			}
+			if (chain[i][1] != null && (chain[i][1].state == 1 || chain[i][1].killed == 1)) {
+				chain[i][1] = null;
+			}
+		}
+	}
 	public void interruptions() {//обработка прерываний
 		if (interruption == -1) {//прерывания(если выполнилось нужное условие, выполняется прерывание. Индекс бота сохраняется, и устанавливается в значение из генов прерывания(они в геноме после мозга). После выполнения завершающей команды индекс восстанавливается.)
 			for (int i = 0; i < 13; i++) {
@@ -831,34 +857,56 @@ public class Bot{
 			}
 		}
 	}
-	public void delete_enr_chain() {//удалить связи в цепочке
-		if (enr_chain_next != null) {//если есть следующий
-			enr_chain_next.enr_chain_prev = null;//у него стираем ссылку на себя
-			enr_chain_next = null;//стираем ссылку на следующего
-		}
-		if (enr_chain_prev != null) {//если есть предыдущий
-			enr_chain_prev.enr_chain_next = null;//у него стираем ссылку на себя
-			enr_chain_prev = null;//стираем ссылку на предыдущего
+	public void delete_chain() {//удалить связи в цепочке
+		for (int i = 0; i < 2; i++) {
+			if (chain[i][0] != null) {//если есть следующий
+				chain[i][0].chain[0][1] = null;//у него стираем ссылку на себя
+				chain[i][0] = null;//стираем ссылку на следующего
+			}
+			if (chain[i][1] != null) {//если есть предыдущий
+				chain[i][1].chain[0][0] = null;//у него стираем ссылку на себя
+				chain[i][1] = null;//стираем ссылку на предыдущего
+			}
 		}
 	}
-	public void enr_chain_distribution() {//распределение энергии в цепочке
-		int sum = energy;
+	public void chain_distribution() {//распределение ресурсов в цепочке
+		int sum = energy;//энергии
 		int count = 1;//подсчет связанных ботов
-		if (enr_chain_next != null) {
-			sum += enr_chain_next.energy;
+		if (chain[0][0] != null) {
+			sum += chain[0][0].energy;
 			count++;
 		}
-		if (enr_chain_prev != null) {
-			sum += enr_chain_prev.energy;
+		if (chain[0][1] != null) {
+			sum += chain[0][1].energy;
 			count++;
 		}
 		if (count > 1) {//распределение энергии
 			energy = sum / count;
-			if (enr_chain_next != null) {//со следующим
-				enr_chain_next.energy = sum / count;
+			if (chain[0][0] != null) {//со следующим
+				chain[0][0].energy = sum / count;
 			}
-			if (enr_chain_prev != null) {//с предыдущим
-				enr_chain_prev.energy = sum / count;
+			if (chain[0][1] != null) {//с предыдущим
+				chain[0][1].energy = sum / count;
+			}
+		}
+		
+		sum = minerals;//минералов
+		count = 1;//подсчет связанных ботов
+		if (chain[1][0] != null) {
+			sum += chain[1][0].minerals;
+			count++;
+		}
+		if (chain[1][1] != null) {
+			sum += chain[1][1].minerals;
+			count++;
+		}
+		if (count > 1) {//распределение энергии
+			minerals = sum / count;
+			if (chain[1][0] != null) {//со следующим
+				chain[1][0].minerals = sum / count;
+			}
+			if (chain[1][1] != null) {//с предыдущим
+				chain[1][1].minerals = sum / count;
 			}
 		}
 	}
