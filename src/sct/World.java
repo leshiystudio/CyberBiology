@@ -43,7 +43,6 @@ public class World extends JPanel{
 	int mouse = 0;//функция мыши
 	int menu = 0;//что отображать в панели управления
 	int draw_type = 0;//режим отрисовки
-	int chain_draw_type = 1;//режим отрисовки цепочек
 	//
 	boolean pause = false;//включена ли симуляция?
 	boolean render = true;//включена ли отрисовка?
@@ -79,9 +78,6 @@ public class World extends JPanel{
 	JButton other_button;
 	JButton close_draw_types_button;
 	JButton clans_button;
-	JButton chain_none_button;
-	JButton chain_enr_button;
-	JButton chain_mnr_button;
 	public World() {
 		setLayout(null);
 		timer = new Timer(delay, new BotListener());
@@ -126,18 +122,6 @@ public class World extends JPanel{
 		clans_button = new JButton("Clans");
 		clans_button.addActionListener(new change_draw_type(6));
 		clans_button.setBounds(W - 170, 40, 125, 20);
-		//кнопка отключения отображения цепочек
-		chain_none_button = new JButton("No render");
-		chain_none_button.addActionListener(new change_chain_draw_type(0));
-		chain_none_button.setBounds(W - 300, 85, 125, 20);
-		//кнопка отображения энергетических цепочек
-		chain_enr_button = new JButton("Energy chains");
-		chain_enr_button.addActionListener(new change_chain_draw_type(1));
-		chain_enr_button.setBounds(W - 170, 85, 125, 20);
-		//кнопка отображения минеральных цепочек
-		chain_mnr_button = new JButton("Minerals chains");
-		chain_mnr_button.addActionListener(new change_chain_draw_type(2));
-		chain_mnr_button.setBounds(W - 300, 110, 125, 20);
         //кнопка выбора бота
         select_button = new JButton("Select");
         select_button.addActionListener(new select());
@@ -277,7 +261,7 @@ public class World extends JPanel{
 		canvas.fillRect(0, 0, W - 300, 1080);
 		if (render) {//все, для чего нужна включенная отрисовка
 			for(Bot b: objects) {//рисуем ботов
-				b.Draw(canvas, draw_type, chain_draw_type);
+				b.Draw(canvas, draw_type);
 			}
 			//for (int x = 0; x < world_scale[0]; x++) {//для отладки
 			//	for (int y = 0; y < world_scale[1]; y++) {
@@ -319,13 +303,6 @@ public class World extends JPanel{
 			}else if (draw_type == 7) {
 				txt_draw_type = "relatives view";
 			}
-			if (chain_draw_type == 0) {//режим отрисовки многоклеточных цепочек
-				txt_chain_draw_type = "no render";
-			}else if (chain_draw_type == 1) {
-				txt_chain_draw_type = "energy chains";
-			}else if (chain_draw_type == 2) {
-				txt_chain_draw_type = "minerals chains";
-			}
 			canvas.drawString("render type: " + txt_draw_type, W - 300, 100);
 			canvas.drawString("chain render type: " + txt_chain_draw_type, W - 300, 120);
 			if (mouse == 0) {
@@ -364,13 +341,13 @@ public class World extends JPanel{
 				}else if (selection.state == 1) {
 					canvas.fillRect(1 + selection.xpos * 10, 1 + selection.ypos * 10, 8, 8);
 				}
-				//if (selection.enr_chain_next != null) {//для отладки
+				//if (selection.chain[0][0] != null) {//для отладки
 				//	canvas.setColor(new Color(255, 0, 255));
-				//	canvas.fillRect(selection.enr_chain_next.xpos * 10, selection.enr_chain_next.ypos * 10, 10, 10);
+				//	canvas.fillRect(selection.chain[0][0].xpos * 10, selection.chain[0][0].ypos * 10, 10, 10);
 				//}
-				//if (selection.enr_chain_prev != null) {
+				//if (selection.chain[0][1] != null) {
 				//	canvas.setColor(new Color(255, 255, 0));
-				//	canvas.fillRect(selection.enr_chain_prev.xpos * 10, selection.enr_chain_prev.ypos * 10, 10, 10);
+				//	canvas.fillRect(selection.chain[0][1].xpos * 10, selection.chain[0][1].ypos * 10, 10, 10);
 				//}
 			}else {//если никто не выбран, пишем "none"
 				canvas.drawString("Selection: none", W - 300, 295);
@@ -403,7 +380,7 @@ public class World extends JPanel{
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
 				for(Bot b: objects) {
-					b.Draw(g2d, 0, 1);
+					b.Draw(g2d, 0);
 				}
 				g2d.dispose();
 				//режим отрисовки энергии
@@ -412,7 +389,7 @@ public class World extends JPanel{
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
 				for(Bot b: objects) {
-					b.Draw(g2d, 2, 1);
+					b.Draw(g2d, 2);
 				}
 				g2d.dispose();
 				//режим отрисовки цвета
@@ -421,7 +398,7 @@ public class World extends JPanel{
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
 				for(Bot b: objects) {
-					b.Draw(g2d, 1, 1);
+					b.Draw(g2d, 1);
 				}
 				g2d.dispose();
 				//режим отрисовки кланов
@@ -430,7 +407,7 @@ public class World extends JPanel{
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
 				for(Bot b: objects) {
-					b.Draw(g2d, 6, 1);
+					b.Draw(g2d, 6);
 				}
 				g2d.dispose();
 				//сохранение в файл
@@ -602,15 +579,6 @@ public class World extends JPanel{
 		}
 		public void actionPerformed(ActionEvent e) {
 			draw_type = number;
-		}
-	}
-	private class change_chain_draw_type implements ActionListener{//смена режима отрисовки(берется из параметра)
-		int number;
-		private change_chain_draw_type(int new_number){
-			number = new_number;
-		}
-		public void actionPerformed(ActionEvent e) {
-			chain_draw_type = number;
 		}
 	}
 	private class start_stop implements ActionListener{//пауза
@@ -813,9 +781,6 @@ public class World extends JPanel{
 			add(relatives_button);
 			add(clans_button);
 			add(close_draw_types_button);
-			add(chain_none_button);
-			add(chain_enr_button);
-			add(chain_mnr_button);
 			menu = 1;
 		}
 	}
@@ -825,9 +790,6 @@ public class World extends JPanel{
 			remove(relatives_button);
 			remove(clans_button);
 			remove(close_draw_types_button);
-			remove(chain_none_button);
-			remove(chain_enr_button);
-			remove(chain_mnr_button);
 			menu = 0;
 		}
 	}
