@@ -209,7 +209,15 @@ public class Bot{
 					if (map[pos[0]][pos[1]] == null) {//если внизу свободно, падать
 						move(4);
 					}else {
-						int r = rand.nextInt(2);
+						int[] pos_left = get_rotate_position(5);
+						int[] pos_right = get_rotate_position(3);
+						if (map[pos_left[0]][pos_left[1]] == null && map[pos_right[0]][pos_right[1]] != null) {
+							move(5);
+						}else if (map[pos_left[0]][pos_left[1]] != null && map[pos_right[0]][pos_right[1]] == null) {
+							move(3);
+						}else if (map[pos_left[0]][pos_left[1]] == null && map[pos_right[0]][pos_right[1]] == null) {
+							move(3 + rand.nextInt(2) * 2);
+						}
 					}
 				}
 				if (steps % 3 == 0) {//каждые 3 хода органика тратит энергию
