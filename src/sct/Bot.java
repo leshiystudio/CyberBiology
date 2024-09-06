@@ -40,7 +40,7 @@ public class Bot{
 	private int[] photo_list = {13, 10, 8, 6, 5, 4};//сколько бот получит энергии от фотосинтеза
 	//private int[] world_scale = {324, 216};
 	private int[] world_scale = {162, 108};//размер мира
-	private int predators_draw_type = 2;//вариант режима отрисовки хищников
+	private int predators_draw_type = 0;//вариант режима отрисовки хищников
 	public int c_red;//красный в режиме отрисовки хищников
 	public int c_green;//зеленый в режиме отрисовки хищников
 	public int c_blue;//синий в режиме отрисовки хищников
@@ -204,7 +204,14 @@ public class Bot{
 				interruptions();//прерывания
 				update_chain();//многоклеточные цепочки
 			}else if (state == 1) {//органика тоже бот
-				move(4);//падать
+				int[] pos = get_rotate_position(4);
+				if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+					if (map[pos[0]][pos[1]] == null) {//если внизу свободно, падать
+						move(4);
+					}else {
+						int r = rand.nextInt(2);
+					}
+				}
 				if (steps % 3 == 0) {//каждые 3 хода органика тратит энергию
 					energy--;
 				}
@@ -224,13 +231,21 @@ public class Bot{
 			if (command == 0 || command == 1) {//фотосинтез
 				int sector = bot_in_sector();
 				if (sector <= 5) {//если бот высоко, то получает энергию из массива для фотосинтеза
-					energy += photo_list[sector];
-					int en = photo_list[sector];
+					int mnr = commands[(index + 1) % 64] % 5;
+					if (minerals < mnr) {
+						mnr = minerals;
+					}
+					minerals -= mnr;
+					int en = (int)(photo_list[sector] * (1 + mnr * 0.25));
+					energy += en;
 					go_green(en);//зеленеем
+					if (mnr > 0) {
+						go_blue((int)(photo_list[sector] * (mnr * 0.25)));//синеем
+					}
 				}else {
 					interruptions_list[2] = true;//если неудачно - выполняется прерывание
 				}
-				next_command_for_stop(1);
+				next_command_for_stop(2);
 				break;//завершающая
 			}else if (command == 2 || command == 3) {//преобразовать минералы в энергию
 				if (minerals >= 4) {//1 минерал == 4 энергии, за раз можно переработать только 4 минерала
@@ -454,11 +469,11 @@ public class Bot{
 				break;//завершающая
 			//
 			}else if (command == 33) {//мутация
-				//бот мутирует. цвет также немного меняется и с шансом 1/100 меняется полностью
-				if (rand.nextInt(100) == 0) {
+				//бот мутирует. цвет также немного меняется и с шансом 1/800 меняется полностью
+				if (rand.nextInt(800) == 0) {
 					color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
 				}else {
-					color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
+					color = new Color(border(color.getRed() + rand.nextInt(-12, 13), 255, 0), border(color.getGreen() + rand.nextInt(-12, 13), 255, 0), border(color.getBlue() + rand.nextInt(-12, 13), 255, 0));
 				}
 				commands[rand.nextInt(64 + 13)] = rand.nextInt(64);
 				next_command_for_stop(1);
@@ -584,10 +599,10 @@ public class Bot{
 				if (map[pos[0]][pos[1]].state == 0) {//если на карте бот
 					Bot b = map[pos[0]][pos[1]];
 					if (b.killed == 0) {
-						if (rand.nextInt(100) == 0) {//меняем боту цвет
+						if (rand.nextInt(800) == 0) {//меняем боту цвет
 							b.color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
 						}else {
-							b.color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
+							b.color = new Color(border(color.getRed() + rand.nextInt(-12, 13), 255, 0), border(color.getGreen() + rand.nextInt(-12, 13), 255, 0), border(color.getBlue() + rand.nextInt(-12, 13), 255, 0));
 						}
 						b.commands[rand.nextInt(64 + 13)] = rand.nextInt(64);//меняем мозг
 						return(true);//успешно
@@ -792,15 +807,15 @@ public class Bot{
 					map[xpos][ypos] = null;
 				}else { //если энергии хватает
 					Color new_color;//цвет нового бота
-					if (rand.nextInt(100) == 0) {//немного меняем(с шансом 1/100 - полностью)
+					if (rand.nextInt(800) == 0) {//немного меняем(с шансом 1/100 - полностью)
 						new_color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
 					}else {
-						new_color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
+						new_color = new Color(border(color.getRed() + rand.nextInt(-12, 13), 255, 0), border(color.getGreen() + rand.nextInt(-12, 13), 255, 0), border(color.getBlue() + rand.nextInt(-12, 13), 255, 0));
 					}
-					if (rand.nextInt(100) == 0) {//меняем свой цвет
+					if (rand.nextInt(800) == 0) {//меняем свой цвет
 						color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
 					}else {
-						color = new Color(border(color.getRed() + rand.nextInt(-12, 12), 255, 0), border(color.getGreen() + rand.nextInt(-12, 12), 255, 0), border(color.getBlue() + rand.nextInt(-12, 12), 255, 0));
+						color = new Color(border(color.getRed() + rand.nextInt(-12, 13), 255, 0), border(color.getGreen() + rand.nextInt(-12, 13), 255, 0), border(color.getBlue() + rand.nextInt(-12, 13), 255, 0));
 					}
 					//копируем мозг
 					int[] new_brain = new int[64 + interruptions_count];

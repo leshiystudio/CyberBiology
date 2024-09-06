@@ -285,7 +285,7 @@ public class World extends JPanel{
 			canvas.drawString("version 2.0", W - 300, 40);
 			canvas.drawString("steps: " + String.valueOf(steps), W - 300, 60);
 			canvas.drawString("objects: " + String.valueOf(obj_count) + ", bots: " + String.valueOf(b_count), W - 300, 80);
-			String txt_draw_type = "", txt_chain_draw_type = "", txt_mouse;
+			String txt_draw_type = "", txt_mouse;
 			if (draw_type == 0) {//режим отрисовки
 				txt_draw_type = "predators view";
 			}else if (draw_type == 1) {
@@ -304,7 +304,6 @@ public class World extends JPanel{
 				txt_draw_type = "relatives view";
 			}
 			canvas.drawString("render type: " + txt_draw_type, W - 300, 100);
-			canvas.drawString("chain render type: " + txt_chain_draw_type, W - 300, 120);
 			if (mouse == 0) {
 				txt_mouse = "select";
 			}else if (mouse == 1) {
@@ -369,7 +368,6 @@ public class World extends JPanel{
 			canvas.drawRect(0, 0, W, H);
 			canvas.setColor(new Color(0, 0, 0));//цвет шрифта
 			canvas.setFont(new Font("arial", Font.BOLD, 18));//шрифт
-			canvas.drawString("Chain render types: ", W - 300, 75);
 		}
 		if (rec && steps % 25 == 0) {//запись
 			try {//чтобы не вылетело
