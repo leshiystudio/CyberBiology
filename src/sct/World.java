@@ -28,6 +28,7 @@ public class World extends JPanel{
 	//int[] world_scale = {324, 216};
 	int[] world_scale = {162, 108};//размер мира
 	Bot[][] Map = new Bot[world_scale[0]][world_scale[1]];//карта со ссылками на объекты, находящиеся в ней
+	int[][] org_map = new int[world_scale[0]][world_scale[1]];//карта органики
 	int W = 1920;//размер экрана
 	int H = 1080;
 	//цвета
@@ -78,6 +79,17 @@ public class World extends JPanel{
 	JButton other_button;
 	JButton close_draw_types_button;
 	JButton clans_button;
+	//
+	private int[][] movelist = {//куда ходить(для диффузии)
+		{0, -1},
+		{1, -1},
+		{1, 0},
+		{1, 1},
+		{0, 1},
+		{-1, 1},
+		{-1, 0},
+		{-1, -1}
+	};
 	public World() {
 		setLayout(null);
 		timer = new Timer(delay, new BotListener());
@@ -260,6 +272,15 @@ public class World extends JPanel{
 		canvas.setColor(white);//залить мир белым
 		canvas.fillRect(0, 0, W - 300, 1080);
 		if (render) {//все, для чего нужна включенная отрисовка
+			for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
+				for (int y = 0; y < world_scale[1]; y++) {
+					int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
+					if (gray > 0) {
+						canvas.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
+						canvas.fillRect(x * 10, y * 10, 10, 10);
+					}
+				}
+			}
 			for(Bot b: objects) {//рисуем ботов
 				b.Draw(canvas, draw_type);
 			}
@@ -282,7 +303,7 @@ public class World extends JPanel{
 			canvas.setFont(new Font("arial", Font.BOLD, 18));//шрифт
 			//рисуем текст
 			canvas.drawString("Main: ", W - 300, 20);
-			canvas.drawString("version 2.0", W - 300, 40);
+			canvas.drawString("version 2.0 pre-release 2", W - 300, 40);
 			canvas.drawString("steps: " + String.valueOf(steps), W - 300, 60);
 			canvas.drawString("objects: " + String.valueOf(obj_count) + ", bots: " + String.valueOf(b_count), W - 300, 80);
 			String txt_draw_type = "", txt_mouse;
@@ -377,6 +398,15 @@ public class World extends JPanel{
 				Graphics2D g2d = buff.createGraphics();
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
+				for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
+					for (int y = 0; y < world_scale[1]; y++) {
+						int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
+						if (gray > 0) {
+							g2d.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
+							g2d.fillRect(x * 10, y * 10, 10, 10);
+						}
+					}
+				}
 				for(Bot b: objects) {
 					b.Draw(g2d, 0);
 				}
@@ -386,6 +416,15 @@ public class World extends JPanel{
 				g2d = buff2.createGraphics();
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
+				for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
+					for (int y = 0; y < world_scale[1]; y++) {
+						int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
+						if (gray > 0) {
+							g2d.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
+							g2d.fillRect(x * 10, y * 10, 10, 10);
+						}
+					}
+				}
 				for(Bot b: objects) {
 					b.Draw(g2d, 2);
 				}
@@ -395,6 +434,15 @@ public class World extends JPanel{
 				g2d = buff3.createGraphics();
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
+				for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
+					for (int y = 0; y < world_scale[1]; y++) {
+						int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
+						if (gray > 0) {
+							g2d.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
+							g2d.fillRect(x * 10, y * 10, 10, 10);
+						}
+					}
+				}
 				for(Bot b: objects) {
 					b.Draw(g2d, 1);
 				}
@@ -404,6 +452,15 @@ public class World extends JPanel{
 				g2d = buff4.createGraphics();
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
+				for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
+					for (int y = 0; y < world_scale[1]; y++) {
+						int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
+						if (gray > 0) {
+							g2d.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
+							g2d.fillRect(x * 10, y * 10, 10, 10);
+						}
+					}
+				}
 				for(Bot b: objects) {
 					b.Draw(g2d, 6);
 				}
@@ -422,6 +479,7 @@ public class World extends JPanel{
 		steps = 0;//сбросить счетчик шагов
 		objects = new ArrayList<Bot>();//сбросить массив с объектами
 		Map = new Bot[world_scale[0]][world_scale[1]];//сбросить карту
+		org_map = new int[world_scale[0]][world_scale[1]];//карта органики
 		for (int i = 0; i < 1000; i++) {//создать 1000 ботов
 			while(true){//чтобы 2 бота не появились на 1 клетке
 				int x = rand.nextInt(world_scale[0]);//случайная позиция
@@ -434,6 +492,7 @@ public class World extends JPanel{
 						new Color(rand.nextInt(256),rand.nextInt(256), rand.nextInt(256)),
 						1000,
 						Map,
+						org_map,
 						objects
 					);
 					new_bot.self = new_bot;
@@ -472,9 +531,9 @@ public class World extends JPanel{
 					if (for_set != null) {//если есть мозг для установки
 						if (Map[botpos[0]][botpos[1]] == null) {//если место клика пустое
 							Bot new_bot;//создать нового бота, задать ему мозг и запустить в мир
-							new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, objects);
+							new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, org_map, objects);
 							new_bot.self = new_bot;
-							for (int i = 0; i < 64 + 3; i++) {//чтобы у разных установленных ботов мозги не ссылались на 1 объект
+							for (int i = 0; i < 64 + 18; i++) {//чтобы у разных установленных ботов мозги не ссылались на 1 объект
 								new_bot.commands[i] = for_set[i];
 							}
 							objects.add(new_bot);
@@ -499,9 +558,9 @@ public class World extends JPanel{
 					if (Map[botpos[0]][botpos[1]] == null) {//если место клика пустое
 						if (for_set != null) {//если есть мозг для установки
 							Bot new_bot;//создать нового бота, задать ему мозг и запустить в мир
-							new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, objects);
+							new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, org_map, objects);
 							new_bot.self = new_bot;
-							for (int i = 0; i < 64 + 3; i++) {//чтобы у разных установленных ботов мозги не ссылались на 1 объект
+							for (int i = 0; i < 64 + 18; i++) {//чтобы у разных установленных ботов мозги не ссылались на 1 объект
 								new_bot.commands[i] = for_set[i];
 							}
 							objects.add(new_bot);
@@ -547,6 +606,13 @@ public class World extends JPanel{
 						b_count++;
 					}
 				}
+				ListIterator<Bot> iterator = objects.listIterator();//удаление мертвых ботов
+				while (iterator.hasNext()) {
+					Bot next_bot = iterator.next();
+					if (next_bot.killed == 1) {
+						iterator.remove();
+					}
+				}
 				if (selection != null) {//если выбранный бот убит, или в карте на его позиции никого нет, сбросить выбранного бота
 					int[] pos = {selection.xpos, selection.ypos};
 					if (selection.killed == 1 || Map[pos[0]][pos[1]] == null){
@@ -557,17 +623,48 @@ public class World extends JPanel{
 					}
 				}
 			}
-			ListIterator<Bot> iterator = objects.listIterator();//удаление мертвых ботов
-			while (iterator.hasNext()) {
-				Bot next_bot = iterator.next();
-				if (next_bot.killed == 1) {
-					iterator.remove();
+			repaint();
+		}
+	}
+	public void water() {//диффузия органики
+		int[][] new_map = new int[162][108];//новая карта
+		for (int x = 0; x < world_scale[0]; x++) {//проходим по всем клеткам
+			for (int y = 0; y < world_scale[1]; y++) {
+				if (org_map[x][y] >= 100 && rand.nextInt(1000) == 0) {//если органики в клетке больше 9, происходит диффузия
+					int enr = org_map[x][y] / 9;
+					new_map[x][y] += org_map[x][y] - enr * 9;
+					for (int i = 0; i < 8; i++) {
+						int[] pos = get_rotate_position(i, x, y);
+						if (pos[1] > 0 & pos[1] < world_scale[1]) {
+							new_map[pos[0]][pos[1]] += enr;
+							if (new_map[pos[0]][pos[1]] > 1000) {
+								new_map[pos[0]][pos[1]] = 1000;
+							}
+						}else {
+							new_map[x][y] += enr;
+						}
+					}
+					new_map[x][y] += enr;
+				}else {
+					new_map[x][y] += org_map[x][y];
+				}
+				if (new_map[x][y] > 1000) {
+					new_map[x][y] = 1000;
 				}
 			}
-			repaint();//
-			
 		}
-		
+		org_map = new_map;
+	}
+	public int[] get_rotate_position(int rot, int xpos, int ypos){//позиция по направлению
+		int[] pos = new int[2];
+		pos[0] = (xpos + movelist[rot][0]) % world_scale[0];//зацикленный мир
+		pos[1] = ypos + movelist[rot][1];
+		if (pos[0] < 0) {//еще
+			pos[0] = world_scale[0] - 1;
+		}else if(pos[0] >= world_scale[0]) {
+			pos[0] = 0;
+		}
+		return(pos);
 	}
 	//функции для кнопок
 	private class change_draw_type implements ActionListener{//смена режима отрисовки(берется из параметра)
@@ -649,7 +746,7 @@ public class World extends JPanel{
 	private class save_bot implements ActionListener{//сохранить бота
 		public void actionPerformed(ActionEvent e) {
 			String txt = "";
-			for (int i = 0; i < 64 + 3; i++) {//превращение мозга в строку
+			for (int i = 0; i < 64 + 18; i++) {//превращение мозга в строку
 				txt += String.valueOf(selection.commands[i]) + " ";
 			}
 			try {//сохранение в файл(имя файла из поля для ввода for_save)
@@ -677,8 +774,8 @@ public class World extends JPanel{
 	            bufferedReader.close();
 	            
 	            String[] l = line.split(" ");//делим строку на куски
-	            for_set = new int[64 + 3];//записываем в for_set
-	            for (int i = 0; i < 64 + 3; i++) {
+	            for_set = new int[64 + 18];//записываем в for_set
+	            for (int i = 0; i < 64 + 18; i++) {
 	            	for_set[i] = Integer.parseInt(l[i]);
 	            }
 	        } catch (IOException ex) {//ошибка
@@ -710,6 +807,7 @@ public class World extends JPanel{
 	    				new Color(Integer.parseInt(bot_data[10]), Integer.parseInt(bot_data[11]), Integer.parseInt(bot_data[12])),
 	    				Integer.parseInt(bot_data[0]),
 	    				Map,
+	    				org_map,
 	    				objects
 	    			);
 	    			new_bot.self = new_bot;

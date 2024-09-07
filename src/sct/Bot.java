@@ -19,7 +19,8 @@ public class Bot{
 	public int minerals = 0;//минералы
 	public int killed = 0;//убит ли бот?
 	public Bot[][] map;//ссылка на карту
-	private int interruptions_count = 16;//количество прерываний
+	public int[][] org_map;//сылка на карту органики
+	private int interruptions_count = 18;//количество прерываний
 	public int[] commands = new int[64 + interruptions_count];
 	public int index = 0;//индекс
 	public int age = 1000;//сколько осталось жить
@@ -36,7 +37,7 @@ public class Bot{
 		{-1, 0},
 		{-1, -1}
 	};
-	private int[] minerals_list = {1, 2, 3};//сколько бот получит минералов
+	private int[] minerals_list = {1, 2, 3, 4};//сколько бот получит минералов
 	private int[] photo_list = {13, 10, 8, 6, 5, 4};//сколько бот получит энергии от фотосинтеза
 	//private int[] world_scale = {324, 216};
 	private int[] world_scale = {162, 108};//размер мира
@@ -44,12 +45,13 @@ public class Bot{
 	public int c_red;//красный в режиме отрисовки хищников
 	public int c_green;//зеленый в режиме отрисовки хищников
 	public int c_blue;//синий в режиме отрисовки хищников
+	public int c_yellow;//желтый в режиме отрисовки хищников
 	public boolean[] interruptions_list = new boolean[interruptions_count];
 	public int interruption = -1;//выполняется ли сейчас прерывание
 	public Bot self;//я
 	public Bot next = null;//следующий в цепочке
 	public Bot prev = null;//предыдущий в цепочке
-	public Bot(int new_xpos, int new_ypos, Color new_color, int new_energy, Bot[][] new_map, ArrayList<Bot> new_objects) {//некоторые данные передаются в конструктор
+	public Bot(int new_xpos, int new_ypos, Color new_color, int new_energy, Bot[][] new_map, int[][] new_org_map, ArrayList<Bot> new_objects) {//некоторые данные передаются в конструктор
 		xpos = new_xpos;
 		ypos = new_ypos;
 		x = new_xpos * 10;
@@ -58,6 +60,7 @@ public class Bot{
 		energy = new_energy;
 		objects = new_objects;
 		map = new_map;
+		org_map = new_org_map;
 		for (int i = 0; i < 64 + interruptions_count; i++) {
 			commands[i] = rand.nextInt(64);
 		}
@@ -80,14 +83,16 @@ public class Bot{
 					int r = 0;
 					int g = 0;
 					int b = 0;
-					if (c_red + c_green + c_blue == 0) {
+					int all = c_red + c_green + c_blue + c_yellow;
+					if (all == 0) {
 						r = 128;
 						g = 128;
 						b = 128;
 					}else {
-						r = (int)((c_red * 1.0) / (c_red + c_green + c_blue) * 255.0);
-						g = (int)((c_green * 1.0) / (c_red + c_green + c_blue) * 255.0);
-						b = (int)((c_blue * 1.0) / (c_red + c_green + c_blue) * 255.0);
+						int y = (int)((c_yellow * 1.0) / all * 255.0);
+						r = max((int)(c_red * 1.0 / all * 255.0), y);
+						g = max((int)(c_green * 1.0 / all * 255.0), y);
+						b = (int)((c_blue * 1.0) / all * 255.0);
 					}
 					canvas.setColor(new Color(r, g, b));
 				}else if (predators_draw_type == 1) {
@@ -177,8 +182,8 @@ public class Bot{
 			if (state == 0) {//бот
 				age--;//постареть
 				int sector = bot_in_sector();//для минералов
-				if (sector <= 7 & sector >= 5) {//приход минералов
-					minerals += minerals_list[sector - 5];
+				if (sector <= 7 & sector >= 4) {//приход минералов
+					minerals += minerals_list[sector - 4];
 				}
 				update_commands(iterator);//мозг
 				if (energy <= 0) {//если мало энергии, умереть(органика не появляется)
@@ -192,10 +197,12 @@ public class Bot{
 				if (energy >= 800) {//автоматическое деление
 					multiply(rotate, 0, iterator);
 				}
-				if (age <= 0) {//если пора помирать от старости
+				if (age <= 0 || org_map[xpos][ypos] >= 800) {//если пора помирать от старости
 					delete_chain();//удалить связи в цепочке
 					state = 1;//стать органикой
 					state2 = 2;
+					org_to_map((int)(energy * 0.3));//ложим 30% энергии в почву
+					energy -= (int)(energy * 0.3);//уменьшаем энергию
 					return(0);
 				}
 				if (minerals > 1000) {//ограничитель минералов
@@ -208,20 +215,23 @@ public class Bot{
 				if (pos[1] >= 0 & pos[1] < world_scale[1]) {
 					if (map[pos[0]][pos[1]] == null) {//если внизу свободно, падать
 						move(4);
-					}else {
-						int[] pos_left = get_rotate_position(5);
-						int[] pos_right = get_rotate_position(3);
-						if (map[pos_left[0]][pos_left[1]] == null && map[pos_right[0]][pos_right[1]] != null) {
+					}else {//если внизу занято, сыпаться
+						int[] pos_left = get_rotate_position(5);//клетка слева снизу
+						int[] pos_right = get_rotate_position(3);//клетка справа снизу
+						if (map[pos_left[0]][pos_left[1]] == null && map[pos_right[0]][pos_right[1]] != null) {//сыпаться влево
 							move(5);
-						}else if (map[pos_left[0]][pos_left[1]] != null && map[pos_right[0]][pos_right[1]] == null) {
+						}else if (map[pos_left[0]][pos_left[1]] != null && map[pos_right[0]][pos_right[1]] == null) {//сыпаться вправо
 							move(3);
-						}else if (map[pos_left[0]][pos_left[1]] == null && map[pos_right[0]][pos_right[1]] == null) {
+						}else if (map[pos_left[0]][pos_left[1]] == null && map[pos_right[0]][pos_right[1]] == null) {//сыпаться в случайную сторону
 							move(3 + rand.nextInt(2) * 2);
 						}
 					}
 				}
 				if (steps % 3 == 0) {//каждые 3 хода органика тратит энергию
 					energy--;
+					if (org_map[xpos][ypos] < 1000) {
+						org_map[xpos][ypos]++;
+					}
 				}
 				if (energy <= 0) {//если энергии нет, органика сгнила
 					killed = 1;
@@ -256,13 +266,13 @@ public class Bot{
 				next_command_for_stop(2);
 				break;//завершающая
 			}else if (command == 2 || command == 3) {//преобразовать минералы в энергию
-				if (minerals >= 4) {//1 минерал == 4 энергии, за раз можно переработать только 4 минерала
+				if (minerals >= 4) {//1 минерал == 3 энергии, за раз можно переработать только 4 минерала
 					minerals -= 4;
-					energy += 16;
-					go_blue(16);//синеем
+					energy += 12;
+					go_blue(12);//синеем
 				}else if (minerals > 0){
-					energy += minerals * 4;
-					go_blue(minerals * 4);//синеем
+					energy += minerals * 3;
+					go_blue(minerals * 3);//синеем
 					minerals = 0;
 				}else {//если нет минералов, выполняется прерывание
 					interruptions_list[3] = true;//если неудачно - выполняется прерывание
@@ -369,7 +379,7 @@ public class Bot{
 				}
 			}else if (command == 19) {//есть ли приход минералов
 				int sector = bot_in_sector();
-				if (sector <= 7 & sector >= 5) {//если есть, переходим по 1 переходу, иначе по 2
+				if (sector <= 7 & sector >= 4) {//если есть, переходим по 1 переходу, иначе по 2
 					index = commands[(index + 1) % 64];
 				}else {
 					index = commands[(index + 2) % 64];
@@ -562,6 +572,60 @@ public class Bot{
 					index += 4;
 					index %= 64;
 					interruptions_list[14] = true;//если неудачно - выполняется прерывание
+				}
+			}else if (command == 43) {//собирать органику под собой
+				int org = commands[(index + 1) % 64] + 1;//сколько органики собираем
+				if (org > org_map[xpos][ypos]) {
+					org = org_map[xpos][ypos];
+				}
+				if (org_map[xpos][ypos] > 0) {//если что - то собрали, желтеем
+					go_yellow(org);
+				}else {
+					interruptions_list[15] = true;//если неудачно - выполняется прерывание
+				}
+				org_map[xpos][ypos] -= org;//съедаем органику
+				energy += org;
+				next_command_for_stop(2);
+				break;//завершающая
+			}else if (command == 44) {//собирать органику перед собой собой
+				int rot = get_rotate_from_genome((index + 1) % 64);//направление
+				int[] pos = get_rotate_position(rot);
+				if (pos[1] >= 0 & pos[1] < world_scale[1]) {//проверка на границы карты
+					int org = commands[(index + 2) % 64] + 1;//сколько органики собираем
+					if (org > org_map[pos[0]][pos[1]]) {
+						org = org_map[pos[0]][pos[1]];
+					}
+					if (org_map[pos[0]][pos[1]] > 0) {//если что - то собрали, желтеем
+						go_yellow(org);
+					}else {
+						interruptions_list[16] = true;//если неудачно - выполняется прерывание
+					}
+					org_map[pos[0]][pos[1]] -= org;//съедаем органику
+					energy += org;
+				}else {
+					interruptions_list[16] = true;//если неудачно - выполняется прерывание
+				}
+				next_command_for_stop(3);
+				break;//завершающая
+			}else if (command == 45) {//сколько органики подо мной
+				int org = org_map[xpos][ypos];//уровень органики
+				if (org >= commands[(index + 1) % 64] * 15) {//если органики больше параметра, переходим по первому переходу, иначе по второму
+					index = commands[(index + 2) % 64];
+				}else {
+					index = commands[(index + 3) % 64];
+				}
+			}else if (command == 46) {//колько органики передо мной
+				int rot = get_rotate_from_genome((index + 1) % 64);//направление
+				int[] pos = get_rotate_position(rot);
+				if (pos[1] >= 0 & pos[1] < world_scale[1]) {//проверка на границы карты
+					int org = org_map[pos[0]][pos[1]];//уровень органики
+					if (org >= commands[(index + 2) % 64] * 15) {//если органики больше параметра, переходим по первому переходу, иначе по второму
+						index = commands[(index + 3) % 64];
+					}else {
+						index = commands[(index + 4) % 64];
+					}
+				}else {
+					interruptions_list[17] = true;//если неудачно - выполняется прерывание
 				}
 			}else {//безусловный переход
 				index += command;
@@ -768,9 +832,11 @@ public class Bot{
 				Bot victim = map[pos[0]][pos[1]];
 				if (victim.killed == 0) {
 					int en = 0;
-					if (victim.energy >= strength) {//если у соседа достаточно энергии, забрать часть себе
+					int strength2 = (int)(strength * 1.3);//общая сила укуса(+ 30% идет в почву органикой)
+					if (victim.energy >= strength2) {//если у соседа достаточно энергии, забрать часть себе
 						energy += strength;
-						victim.energy -= strength;
+						org_to_map(strength2 - strength);//часть энергии идет в почву органикой
+						victim.energy -= strength2;
 						en = strength;
 					}else {//если у соседа мало энергии, он умирает
 						energy += victim.energy;
@@ -840,7 +906,7 @@ public class Bot{
 					}
 					//
 					Bot new_bot;//новый бот
-					new_bot = new Bot(pos[0], pos[1], new_color, energy / 2, map, objects);
+					new_bot = new Bot(pos[0], pos[1], new_color, energy / 2, map, org_map, objects);
 					new_bot.self = new_bot;//записываем потомка в потомка :0
 					new_bot.minerals = minerals / 2;//энергия и минералы равномерно распределяются
 					energy /= 2;
@@ -867,6 +933,22 @@ public class Bot{
 		return(false);//нет
 	}
 	//технические фукнкции
+	public void org_to_map(int en) {//положить органику в карту в квадрате 3*3
+		int org = (int)(en / 9.0);
+		for (int i = 0; i < 8; i++) {//проходим по соседним клеткам
+			int[] pos = get_rotate_position(i);
+			if (pos[1] >= 0 & pos[1] < world_scale[1]) {//проверка на границы карты
+				org_map[pos[0]][pos[1]] += org;//добавляем органику в карту
+				if (org_map[pos[0]][pos[1]] >= 1000) {
+					org_map[pos[0]][pos[1]] = 1000;
+				}
+			}
+		}
+		org_map[xpos][ypos] += org;//добавляем органику под собой
+		if (org_map[xpos][ypos] >= 1000) {
+			org_map[xpos][ypos] = 1000;
+		}
+	}
 	public int get_rotate_from_genome(int ind) {//получение направления
 		int rot = commands[(ind + 1) % 64];//направление берется из параметра
 		if (rot > 31) {
@@ -993,6 +1075,23 @@ public class Bot{
 			}
 		}else if (predators_draw_type == 2) {
 			c_blue += en;
+		}
+	}
+	public void go_yellow(int en) {//желтеть
+		if (predators_draw_type == 0) {
+			c_yellow++;
+		}else if (predators_draw_type == 1) {
+			if (c_red == 128 && c_green == 128 && c_blue == 128) {
+				c_red = 255;
+				c_green = 255;
+				c_blue = 0;
+			}else {
+				c_red = border(c_red + 25, 255, 0);
+				c_green = border(c_green + 25, 255, 0);
+				c_blue = border(c_blue - 25, 255, 0);
+			}
+		}else if (predators_draw_type == 2) {
+			c_yellow += en;
 		}
 	}
 	public boolean is_relative(Color color1, Color color2) {//являются ли боты родственниками(если все цветовые каналы 2 бота находятся в диапазоне от -20 до 20 относительно моего цвета)
