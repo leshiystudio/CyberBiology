@@ -493,7 +493,7 @@ public class Bot{
 				}else {
 					color = new Color(border(color.getRed() + rand.nextInt(-12, 13), 255, 0), border(color.getGreen() + rand.nextInt(-12, 13), 255, 0), border(color.getBlue() + rand.nextInt(-12, 13), 255, 0));
 				}
-				commands[rand.nextInt(64 + 13)] = rand.nextInt(64);
+				commands[rand.nextInt(64 + interruptions_count)] = rand.nextInt(64);
 				next_command_for_stop(1);
 				break;//завершающая
 			}else if (command == 34) {//мутация соседа
@@ -512,7 +512,7 @@ public class Bot{
 				next_command_for_stop(1);
 				break;//завершающая
 			}else if (command == 36) {//уменьшить возраст
-				//бот уменьшает возраст, тратя 1 энергии
+				//бот уменьшает возраст, тратя 4 энергии
 				age -= (commands[(index + 1) % 64] % 4) + 1;
 				energy -= 4;
 				next_command_for_stop(2);
@@ -526,16 +526,7 @@ public class Bot{
 				}
 				next_command_for_stop(2);
 				break;//завершающая
-			}else if (command == 38) {//поделиться(минеральная многоклеточная цепочка)
-				//бот делится, добавляя потомка в многоклеточную цепочку. Если у бота уже есть 2 связи в цепочке, потомок появляется свободным
-				int rot = get_rotate_from_genome((index + 1) % 64);//направление
-				boolean sens = multiply(rot, 2, iterator);
-				if (!sens) {
-					interruptions_list[13] = true;//если неудачно - выполняется прерывание
-				}
-				next_command_for_stop(2);
-				break;//завершающая
-			}else if (command == 39) {//какая моя позиция в энергетической многоклеточной цепочке
+			}else if (command == 38) {//какая моя позиция в энергетической многоклеточной цепочке
 				if (next == null && prev == null) {//не в цепочке
 					index = commands[(index + 1) % 64];
 				}else if (next != null && prev != null) {//в середине
@@ -543,7 +534,7 @@ public class Bot{
 				}else {//в конце
 					index = commands[(index + 3) % 64];
 				}
-			}else if (command == 40) {//энергия соседа больше моей
+			}else if (command == 39) {//энергия соседа больше моей
 				int rot = get_rotate_from_genome((index + 1) % 64);//направление
 				int sens = neighbour_param_bigger_than_my_param(rot, 0);
 				if (sens != 2) {
@@ -551,9 +542,9 @@ public class Bot{
 				}else {
 					index += 4;
 					index %= 64;
-					interruptions_list[14] = true;//если неудачно - выполняется прерывание
+					interruptions_list[13] = true;//если неудачно - выполняется прерывание
 				}
-			}else if (command == 41) {//минералов соседа больше моих
+			}else if (command == 40) {//минералов соседа больше моих
 				int rot = get_rotate_from_genome((index + 1) % 64);//направление
 				int sens = neighbour_param_bigger_than_my_param(rot, 1);
 				if (sens != 2) {
@@ -561,9 +552,9 @@ public class Bot{
 				}else {
 					index += 4;
 					index %= 64;
-					interruptions_list[14] = true;//если неудачно - выполняется прерывание
+					interruptions_list[13] = true;//если неудачно - выполняется прерывание
 				}
-			}else if (command == 42) {//возраст соседа больше моего
+			}else if (command == 41) {//возраст соседа больше моего
 				int rot = get_rotate_from_genome((index + 1) % 64);//направление
 				int sens = neighbour_param_bigger_than_my_param(rot, 2);
 				if (sens != 2) {
@@ -571,9 +562,9 @@ public class Bot{
 				}else {
 					index += 4;
 					index %= 64;
-					interruptions_list[14] = true;//если неудачно - выполняется прерывание
+					interruptions_list[13] = true;//если неудачно - выполняется прерывание
 				}
-			}else if (command == 43) {//собирать органику под собой
+			}else if (command == 42) {//собирать органику под собой
 				int org = commands[(index + 1) % 64] + 1;//сколько органики собираем
 				if (org > org_map[xpos][ypos]) {
 					org = org_map[xpos][ypos];
@@ -581,13 +572,13 @@ public class Bot{
 				if (org_map[xpos][ypos] > 0) {//если что - то собрали, желтеем
 					go_yellow(org);
 				}else {
-					interruptions_list[15] = true;//если неудачно - выполняется прерывание
+					interruptions_list[14] = true;//если неудачно - выполняется прерывание
 				}
 				org_map[xpos][ypos] -= org;//съедаем органику
 				energy += org;
 				next_command_for_stop(2);
 				break;//завершающая
-			}else if (command == 44) {//собирать органику перед собой собой
+			}else if (command == 43) {//собирать органику перед собой собой
 				int rot = get_rotate_from_genome((index + 1) % 64);//направление
 				int[] pos = get_rotate_position(rot);
 				if (pos[1] >= 0 & pos[1] < world_scale[1]) {//проверка на границы карты
@@ -598,23 +589,23 @@ public class Bot{
 					if (org_map[pos[0]][pos[1]] > 0) {//если что - то собрали, желтеем
 						go_yellow(org);
 					}else {
-						interruptions_list[16] = true;//если неудачно - выполняется прерывание
+						interruptions_list[15] = true;//если неудачно - выполняется прерывание
 					}
 					org_map[pos[0]][pos[1]] -= org;//съедаем органику
 					energy += org;
 				}else {
-					interruptions_list[16] = true;//если неудачно - выполняется прерывание
+					interruptions_list[15] = true;//если неудачно - выполняется прерывание
 				}
 				next_command_for_stop(3);
 				break;//завершающая
-			}else if (command == 45) {//сколько органики подо мной
+			}else if (command == 44) {//сколько органики подо мной
 				int org = org_map[xpos][ypos];//уровень органики
 				if (org >= commands[(index + 1) % 64] * 15) {//если органики больше параметра, переходим по первому переходу, иначе по второму
 					index = commands[(index + 2) % 64];
 				}else {
 					index = commands[(index + 3) % 64];
 				}
-			}else if (command == 46) {//колько органики передо мной
+			}else if (command == 45) {//колько органики передо мной
 				int rot = get_rotate_from_genome((index + 1) % 64);//направление
 				int[] pos = get_rotate_position(rot);
 				if (pos[1] >= 0 & pos[1] < world_scale[1]) {//проверка на границы карты
@@ -625,7 +616,7 @@ public class Bot{
 						index = commands[(index + 4) % 64];
 					}
 				}else {
-					interruptions_list[17] = true;//если неудачно - выполняется прерывание
+					interruptions_list[16] = true;//если неудачно - выполняется прерывание
 				}
 			}else {//безусловный переход
 				index += command;
@@ -676,7 +667,7 @@ public class Bot{
 						}else {
 							b.color = new Color(border(color.getRed() + rand.nextInt(-12, 13), 255, 0), border(color.getGreen() + rand.nextInt(-12, 13), 255, 0), border(color.getBlue() + rand.nextInt(-12, 13), 255, 0));
 						}
-						b.commands[rand.nextInt(64 + 13)] = rand.nextInt(64);//меняем мозг
+						b.commands[rand.nextInt(64 + interruptions_count)] = rand.nextInt(64);//меняем мозг
 						return(true);//успешно
 					}
 				}
@@ -902,7 +893,7 @@ public class Bot{
 					}
 					if (rand.nextInt(4) == 0) {//мутация предка
 						commands[rand.nextInt(64 + interruptions_count)] = rand.nextInt(64);
-						interruptions_list[15] = true;//прерывание
+						interruptions_list[17] = true;//прерывание
 					}
 					//
 					Bot new_bot;//новый бот

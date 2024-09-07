@@ -303,7 +303,7 @@ public class World extends JPanel{
 			canvas.setFont(new Font("arial", Font.BOLD, 18));//шрифт
 			//рисуем текст
 			canvas.drawString("Main: ", W - 300, 20);
-			canvas.drawString("version 2.0 pre-release 2", W - 300, 40);
+			canvas.drawString("version 2.0", W - 300, 40);
 			canvas.drawString("steps: " + String.valueOf(steps), W - 300, 60);
 			canvas.drawString("objects: " + String.valueOf(obj_count) + ", bots: " + String.valueOf(b_count), W - 300, 80);
 			String txt_draw_type = "", txt_mouse;
