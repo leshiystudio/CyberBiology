@@ -17,9 +17,8 @@ public class Bot{
 	public int energy;
 	public int minerals;
 	public int killed = 0;
-	public Bot[][] map;
+	public int[][] map;
 	public int[] commands = new int[64];
-	//public int commands = {};
 	private int index = 0;
 	public int age = 1000;
 	public int state = 0;//бот или органика
@@ -53,7 +52,7 @@ public class Bot{
 	private int c_green = 0;
 	private int c_blue = 0;
 	private int sector_len = world_scale[1] / 8;
-	public Bot(int new_xpos, int new_ypos, Color new_color, int new_energy, Bot[][] new_map, ArrayList<Bot> new_objects) {
+	public Bot(int new_xpos, int new_ypos, Color new_color, int new_energy, int[][] new_map, ArrayList<Bot> new_objects) {
 		xpos = new_xpos;
 		ypos = new_ypos;
 		x = new_xpos * 10;
@@ -66,6 +65,8 @@ public class Bot{
 		for (int i = 0; i < 64; i++) {
 			commands[i] = rand.nextInt(64);
 		}
+		//world_scale[0] = map.length;
+		//world_scale[1] = map[0].length;
 	}
 	public void Draw(Graphics canvas, int draw_type) {
 		if (state == 0) {//рисуем бота
@@ -105,12 +106,8 @@ public class Bot{
 				canvas.setColor(new Color(rg, rg, 255));
 			}else if (draw_type == 4) {//возраста
 				canvas.setColor(new Color((int)(age / 1000.0 * 255.0), (int)(age / 1000.0 * 255.0), (int)(age / 1000.0 * 255.0)));
-			}else if (draw_type == 5) {
-				//
 			}
 			canvas.fillRect(x + 1, y + 1, 8, 8);
-			canvas.setColor(new Color(0, 0, 0));
-			canvas.drawLine(x + 5, y + 5, x + 5 + movelist[rotate][0] * 4, y + 5 + movelist[rotate][1] * 4);
 		}else {//рисуем органику
 			canvas.setColor(new Color(0, 0, 0));
 			canvas.fillRect(x + 1, y + 1, 8, 8);
@@ -130,7 +127,7 @@ public class Bot{
 				update_commands(iterator);
 				if (energy <= 0) {
 					killed = 1;
-					map[xpos][ypos] = null;
+					map[xpos][ypos] = 0;
 					return(0);
 				}else if (energy > 1000) {
 					energy = 1000;
@@ -141,6 +138,7 @@ public class Bot{
 				if (age <= 0) {
 					state = 1;
 					state2 = 2;
+					map[xpos][ypos] = 2;
 					return(0);
 				}
 				if (minerals > 1000) {
@@ -150,7 +148,7 @@ public class Bot{
 				move(4);
 				int[] pos = get_rotate_position(4);
 				if (pos[1] > 0 & pos[1] < world_scale[1]) {
-					if (map[pos[0]][pos[1]] != null) {
+					if (map[pos[0]][pos[1]] != 0) {
 						state = 2;
 					}
 				}
@@ -210,31 +208,9 @@ public class Bot{
 			}else if (command == 30) {//посмотреть относительно
 				int[] pos = get_rotate_position(commands[(index + 1) % 64] % 8);
 				if (pos[1] > 0 & pos[1] < world_scale[1]) {
-					if (map[pos[0]][pos[1]] == null) {
+					if (map[pos[0]][pos[1]] == 0) {
 						index = commands[(index + 3) % 64];//если ничего
-					}else if (map[pos[0]][pos[1]].state == 0) {
-						Bot b = map[pos[0]][pos[1]];
-						if (b != null) {
-							if (is_relative(commands, b.commands)) {
-								index = commands[(index + 4) % 64];//если родственник
-							}else {
-								index = commands[(index + 3) % 64];//если враг
-							}
-						}else {
-							index = commands[(index + 2) % 64];//если ничего
-						}
-					}else if (map[pos[0]][pos[1]].state != 0) {
-						index = commands[(index + 6) % 64];//если органика
-					}
-				}else {
-					index = commands[(index + 2) % 64];//если граница
-				}
-			}else if (command == 31) {//посмотреть абсолютно
-				int[] pos = get_rotate_position(rotate);
-				if (pos[1] > 0 & pos[1] < world_scale[1]) {
-					if (map[pos[0]][pos[1]] == null) {
-						index = commands[(index + 2) % 64];//если ничего
-					}else if (map[pos[0]][pos[1]].state == 0) {//если бот
+					}else if (map[pos[0]][pos[1]] == 1) {
 						Bot b = find(pos);
 						if (b != null) {
 							if (is_relative(commands, b.commands)) {
@@ -245,18 +221,40 @@ public class Bot{
 						}else {
 							index = commands[(index + 2) % 64];//если ничего
 						}
-					}else if (map[pos[0]][pos[1]].state != 0) {
+					}else if (map[pos[0]][pos[1]] == 2) {
+						index = commands[(index + 6) % 64];//если органика
+					}
+				}else {
+					index = commands[(index + 2) % 64];//если граница
+				}
+			}else if (command == 31) {//посмотреть абсолютно
+				int[] pos = get_rotate_position(rotate);
+				if (pos[1] > 0 & pos[1] < world_scale[1]) {
+					if (map[pos[0]][pos[1]] == 0) {
+						index = commands[(index + 2) % 64];//если ничего
+					}else if (map[pos[0]][pos[1]] == 1) {
+						Bot b = find(pos);
+						if (b != null) {
+							if (is_relative(commands, b.commands)) {
+								index = commands[(index + 4) % 64];//если родственник
+							}else {
+								index = commands[(index + 3) % 64];//если враг
+							}
+						}else {
+							index = commands[(index + 2) % 64];//если ничего
+						}
+					}else if (map[pos[0]][pos[1]] == 2) {
 						index = commands[(index + 5) % 64];//если органика
 					}
 				}else {
 					index = commands[(index + 1) % 64];//если граница
 				}
-			}else if (command == 34 || command == 50) {//отдать ресурсы относительно
+			}else if (command == 34 | command == 50) {//отдать ресурсы относительно
 				give(commands[(index + 1) % 64] % 8);
 				index += 2;
 				index %= 64;
 				break;
-			}else if (command == 35 || command == 52) {//отдать ресурсы абсолютно
+			}else if (command == 35 | command == 52) {//отдать ресурсы абсолютно
 				give(rotate);
 				index += 1;
 				index %= 64;
@@ -309,15 +307,15 @@ public class Bot{
 				index %= 64;
 				break;
 			}else if (command == 43) {//какая моя позиция x
-				double ind = commands[(index + 1) % 64] / 63.0;
-				if (xpos * 1.0 / world_scale[0] >= ind) {
+				double ind = commands[(index + 1) % 64] / 64.0;
+				if (xpos * world_scale[0] >= ind) {
 					index = commands[(index + 2) % 64];
 				}else {
 					index = commands[(index + 3) % 64];
 				}
 			}else if (command == 44) {//какая моя позиция y
-				double ind = commands[(index + 1) % 64] / 63.0;
-				if (ypos * 1.0 / world_scale[1] >= ind) {
+				double ind = commands[(index + 1) % 64] / 64.0;
+				if (ypos * world_scale[1] >= ind) {
 					index = commands[(index + 2) % 64];
 				}else {
 					index = commands[(index + 3) % 64];
@@ -339,10 +337,8 @@ public class Bot{
 				index += 1;
 				index %= 64;
 				break;
-			}else if (command == 48) {//безусловный переход
-				index = commands[(index + 1) % 64];
 			}else {
-				index += commands[index];
+				index += command;
 				index %= 64;
 			}
 		}
@@ -350,15 +346,13 @@ public class Bot{
 	public void give(int rot) {
 		int[] pos = get_rotate_position(rot);
 		if (pos[1] > 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				if (map[pos[0]][pos[1]].state == 0) {
-					Bot relative = map[pos[0]][pos[1]];
-					if (relative.killed == 0) {
-						relative.energy += energy / 4;
-						relative.minerals += minerals / 4;
-						energy -= energy / 4;
-						minerals -= minerals / 4;
-					}
+			if (map[pos[0]][pos[1]] == 1) {
+				Bot relative = find(pos);
+				if (relative.killed == 0) {
+					relative.energy += energy / 4;
+					relative.minerals += minerals / 4;
+					energy -= energy / 4;
+					minerals -= minerals / 4;
 				}
 			}
 		}
@@ -366,17 +360,15 @@ public class Bot{
 	public void give2(int rot) {
 		int[] pos = get_rotate_position(rot);
 		if (pos[1] > 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				if (map[pos[0]][pos[1]].state == 0) {
-					Bot relative = map[pos[0]][pos[1]];
-					if (relative.killed == 0) {
-						int enr = relative.energy + energy;
-						int mnr = relative.minerals + minerals;
-						relative.energy = enr / 2;
-						relative.minerals = mnr / 2;
-						energy = enr / 2;
-						minerals = mnr / 2;
-					}
+			if (map[pos[0]][pos[1]] == 1) {
+				Bot relative = find(pos);
+				if (relative.killed == 0) {
+					int enr = relative.energy + energy;
+					int mnr = relative.minerals + minerals;
+					relative.energy = enr / 2;
+					relative.minerals = mnr / 2;
+					energy = enr / 2;
+					minerals = mnr / 2;
 				}
 			}
 		}
@@ -384,32 +376,12 @@ public class Bot{
 	public void attack(int rot) {
 		int[] pos = get_rotate_position(rot);
 		if (pos[1] > 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				Bot victim = map[pos[0]][pos[1]];
+			if (map[pos[0]][pos[1]] != 0) {
+				Bot victim = find(pos);
 				if (victim != null) {
 					victim.killed = 1;
 					energy += victim.energy;
-					map[pos[0]][pos[1]] = null;
-					c_red++;
-				}
-			}
-		}
-	}
-	public void attack2(int rot, int strength) {
-		int[] pos = get_rotate_position(rot);
-		if (pos[1] > 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] != null) {
-				Bot victim = map[pos[0]][pos[1]];
-				if (victim != null) {
-					if (victim.energy >= strength) {
-						energy += strength;
-						victim.energy -= strength;
-					}else {
-						energy += victim.energy;
-						victim.energy = 0;
-						victim.killed = 1;
-						map[pos[0]][pos[1]] = null;
-					}
+					map[pos[0]][pos[1]] = 0;
 					c_red++;
 				}
 			}
@@ -449,14 +421,13 @@ public class Bot{
 	public int move(int rot) {
 		int[] pos = get_rotate_position(rot);
 		if (pos[1] > 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] == null) {
-				Bot self = map[xpos][ypos];
-				map[xpos][ypos] = null;
+			if (map[pos[0]][pos[1]] == 0) {
+				map[xpos][ypos] = 0;
 				xpos = pos[0];
 				ypos = pos[1];
 				x = xpos * 10;
 				y = ypos * 10;
-				map[xpos][ypos] = self;
+				map[xpos][ypos] = state2;
 				return(1);
 			}
 		}
@@ -465,12 +436,13 @@ public class Bot{
 	public void multiply(int rot, ListIterator<Bot> iterator) {
 		int[] pos = get_rotate_position(rot);
 		if (pos[1] > 0 & pos[1] < world_scale[1]) {
-			if (map[pos[0]][pos[1]] == null) {
+			if (map[pos[0]][pos[1]] == 0) {
 				energy -= 150;
 				if (energy <= 0) {
 					killed = 1;
-					map[xpos][ypos] = null;
-				}else { 
+					map[xpos][ypos] = 0;
+				}else {
+					map[pos[0]][pos[1]] = 1; 
 					Color new_color = color;
 					int[] new_brain = new int[64];
 					for (int i = 0; i < 64; i++) {
@@ -485,7 +457,6 @@ public class Bot{
 					energy /= 2;
 					minerals /= 2;
 					new_bot.commands = new_brain;
-					map[pos[0]][pos[1]] = new_bot;
 					iterator.add(new_bot);
 				}
 			}
@@ -497,22 +468,5 @@ public class Bot{
 			sec = 10;
 		}
 		return(sec);
-	}
-	public int border(int number, int border1, int border2) {
-		if (number > border1) {
-			number = border1;
-		}else if (number < border2) {
-			number = border2;
-		}
-		return(number);
-	}
-	public int max(int number1, int number2) {//максимальное из двух чисел
-		if (number1 > number2) {
-			return(number1);
-		}else if (number2 > number1) {
-			return(number2);
-		}else {
-			return(number1);
-		}
 	}
 }
