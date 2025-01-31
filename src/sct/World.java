@@ -163,7 +163,7 @@ public class World extends JPanel{
 		canvas.setColor(black);
 		canvas.setFont(new Font("arial", Font.BOLD, 18));
 		canvas.drawString("Main: ", W - 300, 20);
-		canvas.drawString("version 1.9", W - 300, 40);
+		canvas.drawString("version 1.7", W - 300, 40);
 		canvas.drawString("steps: " + String.valueOf(steps), W - 300, 60);
 		canvas.drawString("objects: " + String.valueOf(obj_count) + ", bots: " + String.valueOf(b_count), W - 300, 80);
 		if (draw_type == 0) {
@@ -466,11 +466,7 @@ public class World extends JPanel{
 	private class shbr implements ActionListener{
 		public void actionPerformed(ActionEvent e) {
 			sh_brain = !sh_brain;
-			if (pause == false) {
-				pause = true;
-			}else if (sh_brain == false) {
-				pause = false;
-			}
+			new start_stop().actionPerformed(e);
 		}
 	}
 	private class kill_all implements ActionListener{
