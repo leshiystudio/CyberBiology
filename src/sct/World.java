@@ -65,7 +65,7 @@ public class World extends JPanel{
 	JButton energy_button;
 	JButton color_button;
 	JButton minerals_button;
-	JButton relatives_button;
+	JButton memory_button;
 	JButton age_button;
 	JButton load_bot_button;
 	JButton load_world_button;
@@ -127,9 +127,9 @@ public class World extends JPanel{
 		color_button.setBounds(W - 300, 260, 125, 20);
         add(color_button);
         //кнопка режима отрисовки родственников(не работает)
-        relatives_button = new JButton("Relatives");
-        relatives_button.addActionListener(new change_draw_type(7));
-        relatives_button.setBounds(W - 300, 40, 125, 20);
+        memory_button = new JButton("Memory");
+        memory_button.addActionListener(new change_draw_type(5));
+        memory_button.setBounds(W - 300, 40, 125, 20);
 		//кнопка режима отрисовки кланов
 		clans_button = new JButton("Clans");
 		clans_button.addActionListener(new change_draw_type(6));
@@ -215,7 +215,7 @@ public class World extends JPanel{
 		remove(energy_button);
 		remove(minerals_button);
 		remove(age_button);
-		remove(relatives_button);
+		remove(memory_button);
 		remove(color_button);
 		remove(render_button);
 		remove(record_button);
@@ -240,7 +240,7 @@ public class World extends JPanel{
 		add(energy_button);
 		add(minerals_button);
 		add(age_button);
-		add(relatives_button);
+		add(memory_button);
 		add(color_button);
 		add(render_button);
 		add(record_button);
@@ -303,7 +303,7 @@ public class World extends JPanel{
 			canvas.setFont(new Font("arial", Font.BOLD, 18));//шрифт
 			//рисуем текст
 			canvas.drawString("Main: ", W - 300, 20);
-			canvas.drawString("version 2.0 pre-release 2", W - 300, 40);
+			canvas.drawString("version 2.0", W - 300, 40);
 			canvas.drawString("steps: " + String.valueOf(steps), W - 300, 60);
 			canvas.drawString("objects: " + String.valueOf(obj_count) + ", bots: " + String.valueOf(b_count), W - 300, 80);
 			String txt_draw_type = "", txt_mouse;
@@ -318,7 +318,7 @@ public class World extends JPanel{
 			}else if (draw_type == 4){
 				txt_draw_type = "age view";
 			}else if (draw_type == 5) {
-				txt_draw_type = "virus view";
+				txt_draw_type = "memory view";
 			}else if (draw_type == 6) {
 				txt_draw_type = "clans view";
 			}else if (draw_type == 7) {
@@ -480,6 +480,11 @@ public class World extends JPanel{
 		objects = new ArrayList<Bot>();//сбросить массив с объектами
 		Map = new Bot[world_scale[0]][world_scale[1]];//сбросить карту
 		org_map = new int[world_scale[0]][world_scale[1]];//карта органики
+		for (int x = 0; x < world_scale[0]; x++) {
+			for (int y = 0; y < world_scale[1]; y++) {
+				org_map[x][y] = 100;
+			}
+		}
 		for (int i = 0; i < 1000; i++) {//создать 1000 ботов
 			while(true){//чтобы 2 бота не появились на 1 клетке
 				int x = rand.nextInt(world_scale[0]);//случайная позиция
@@ -545,6 +550,7 @@ public class World extends JPanel{
 						Bot b = Map[botpos[0]][botpos[1]];
 						b.energy = 0;
 						b.killed = 1;
+						objects.remove(b);
 						Map[botpos[0]][botpos[1]] = null;
 					}
 				}
@@ -572,6 +578,7 @@ public class World extends JPanel{
 						Bot b = Map[botpos[0]][botpos[1]];
 						b.energy = 0;
 						b.killed = 1;
+						objects.remove(b);
 						Map[botpos[0]][botpos[1]] = null;
 					}
 				}
@@ -874,7 +881,7 @@ public class World extends JPanel{
 	private class open_draw_types implements ActionListener{//открыть меню выбора режима отрисовки
 		public void actionPerformed(ActionEvent e) {
 			remove_main();
-			add(relatives_button);
+			add(memory_button);
 			add(clans_button);
 			add(close_draw_types_button);
 			menu = 1;
@@ -883,7 +890,7 @@ public class World extends JPanel{
 	private class close_draw_types implements ActionListener{//закрыть меню выбора режима отрисовки
 		public void actionPerformed(ActionEvent e) {
 			add_main();
-			remove(relatives_button);
+			remove(memory_button);
 			remove(clans_button);
 			remove(close_draw_types_button);
 			menu = 0;
