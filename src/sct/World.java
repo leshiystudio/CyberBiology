@@ -85,6 +85,10 @@ public class World extends JPanel{
         color_button.addActionListener(new dr2());
 		color_button.setBounds(W - 300, 240, 125, 20);
         add(color_button);
+        JButton mimicry_button = new JButton("Mimicry");
+        mimicry_button.addActionListener(new dr6());
+		mimicry_button.setBounds(W - 170, 240, 125, 20);
+        add(mimicry_button);
         JButton select_button = new JButton("Select");
         select_button.addActionListener(new select());
 		select_button.setBounds(W - 300, 455, 95, 20);
@@ -116,13 +120,19 @@ public class World extends JPanel{
         //
         JButton load_bot_button = new JButton("Load bot");
         load_bot_button.addActionListener(new load_bot());
-        load_bot_button.setBounds(W - 300, 540, 125, 20);
+        load_bot_button.setBounds(W - 300, 540, 90, 20);
         add(load_bot_button);
         //
         JButton load_world_button = new JButton("Load world");
         //load_world_button.addActionListener(new remove());
-        load_world_button.setBounds(W - 170, 540, 125, 20);
+        load_world_button.setBounds(W - 205, 540, 90, 20);
         add(load_world_button);
+        //
+        //JButton save_world_button = new JButton("Save world");
+        //save_world_button.addActionListener(new remove());
+        //save_world_button.setBounds(W - 110, 540, 90, 20);
+        //add(save_world_button);
+        //
         JButton new_population_button = new JButton("New population");
         new_population_button.addActionListener(new nwp());
         new_population_button.setBounds(W - 300, 590, 125, 20);
@@ -173,7 +183,7 @@ public class World extends JPanel{
 		canvas.setColor(black);
 		canvas.setFont(new Font("arial", Font.BOLD, 18));
 		canvas.drawString("Main: ", W - 300, 20);
-		canvas.drawString("version 1.9.1", W - 300, 40);
+		canvas.drawString("version 1.10", W - 300, 40);
 		canvas.drawString("steps: " + String.valueOf(steps), W - 300, 60);
 		canvas.drawString("objects: " + String.valueOf(obj_count) + ", bots: " + String.valueOf(b_count), W - 300, 80);
 		if (draw_type == 0) {
@@ -184,8 +194,10 @@ public class World extends JPanel{
 			txt = "energy view";
 		}else if (draw_type == 3) {
 			txt = "minerals view";
-		}else {
+		}else if (draw_type == 4){
 			txt = "age view";
+		}else if (draw_type == 5) {
+			txt = "mimicry view";
 		}
 		canvas.drawString("render type: " + txt, W - 300, 100);
 		if (mouse == 0) {
@@ -314,9 +326,7 @@ public class World extends JPanel{
 						if (Map[botpos[0]][botpos[1]] == null) {
 							if (for_set != null) {
 								Bot new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, objects);
-								for (int i = 0; i < 64; i++) {
-									new_bot.commands[i] = for_set[i];
-								}
+								new_bot.commands = for_set;
 								objects.add(new_bot);
 								Map[botpos[0]][botpos[1]] = new_bot;
 							}
@@ -341,9 +351,7 @@ public class World extends JPanel{
 						if (Map[botpos[0]][botpos[1]] == null) {
 							if (for_set != null) {
 								Bot new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, objects);
-								for (int i = 0; i < 64; i++) {
-									new_bot.commands[i] = for_set[i];
-								}
+								new_bot.commands = for_set;
 								objects.add(new_bot);
 								Map[botpos[0]][botpos[1]] = new_bot;
 							}
@@ -396,9 +404,6 @@ public class World extends JPanel{
 					}
 				}
 			}
-			//if (steps >= 1000) {
-			//	newPopulation();
-			//}
 			ListIterator<Bot> iterator = objects.listIterator();
 			while (iterator.hasNext()) {
 				Bot next_bot = iterator.next();
@@ -407,7 +412,9 @@ public class World extends JPanel{
 				}
 			}
 			repaint();
+			
 		}
+		
 	}
 	private class dr1 implements ActionListener{
 		public void actionPerformed(ActionEvent e) {

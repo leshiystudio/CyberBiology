@@ -19,7 +19,6 @@ public class Bot{
 	public int killed = 0;
 	public Bot[][] map;
 	public int[] commands = new int[64];
-	//public int commands = {};
 	private int index = 0;
 	public int age = 1000;
 	public int state = 0;//бот или органика
@@ -53,6 +52,7 @@ public class Bot{
 	private int c_green = 0;
 	private int c_blue = 0;
 	private int sector_len = world_scale[1] / 8;
+	public int mimicry_time = 0;
 	public Bot(int new_xpos, int new_ypos, Color new_color, int new_energy, Bot[][] new_map, ArrayList<Bot> new_objects) {
 		xpos = new_xpos;
 		ypos = new_ypos;
@@ -66,6 +66,8 @@ public class Bot{
 		for (int i = 0; i < 64; i++) {
 			commands[i] = rand.nextInt(64);
 		}
+		//world_scale[0] = map.length;
+		//world_scale[1] = map[0].length;
 	}
 	public void Draw(Graphics canvas, int draw_type) {
 		if (state == 0) {//рисуем бота
@@ -106,11 +108,9 @@ public class Bot{
 			}else if (draw_type == 4) {//возраста
 				canvas.setColor(new Color((int)(age / 1000.0 * 255.0), (int)(age / 1000.0 * 255.0), (int)(age / 1000.0 * 255.0)));
 			}else if (draw_type == 5) {
-				//
+				canvas.setColor(new Color(0, mimicry_time * (int)(255.0 / 3), 255));
 			}
 			canvas.fillRect(x + 1, y + 1, 8, 8);
-			canvas.setColor(new Color(0, 0, 0));
-			canvas.drawLine(x + 5, y + 5, x + 5 + movelist[rotate][0] * 4, y + 5 + movelist[rotate][1] * 4);
 		}else {//рисуем органику
 			canvas.setColor(new Color(0, 0, 0));
 			canvas.fillRect(x + 1, y + 1, 8, 8);
@@ -121,6 +121,9 @@ public class Bot{
 	public int Update(ListIterator<Bot> iterator) {
 		if (killed == 0) {
 			if (state == 0) {//бот
+				if (mimicry_time > 0) {
+					mimicry_time--;
+				}
 				int sector = bot_in_sector();
 				energy -= 1;
 				age -= 1;
@@ -148,12 +151,6 @@ public class Bot{
 				}
 			}else if (state == 1) {//падающая органика
 				move(4);
-				int[] pos = get_rotate_position(4);
-				if (pos[1] > 0 & pos[1] < world_scale[1]) {
-					if (map[pos[0]][pos[1]] != null) {
-						state = 2;
-					}
-				}
 			}else {//стоящая органика
 				//
 			}
@@ -172,7 +169,7 @@ public class Bot{
 				rotate = commands[(index + 1) % 64] % 8;
 				index += 2;
 				index %= 64;
-			}else if (command == 25) {//фотосинтез
+			}else if (command == 25 || command == 1) {//фотосинтез
 				int sector = bot_in_sector();
 				if (sector <= 5) {
 					energy += photo_list[sector];
@@ -215,7 +212,7 @@ public class Bot{
 					}else if (map[pos[0]][pos[1]].state == 0) {
 						Bot b = map[pos[0]][pos[1]];
 						if (b != null) {
-							if (is_relative(commands, b.commands)) {
+							if (is_relative(commands, b.commands) || b.mimicry_time > 0) {
 								index = commands[(index + 4) % 64];//если родственник
 							}else {
 								index = commands[(index + 3) % 64];//если враг
@@ -237,7 +234,7 @@ public class Bot{
 					}else if (map[pos[0]][pos[1]].state == 0) {//если бот
 						Bot b = find(pos);
 						if (b != null) {
-							if (is_relative(commands, b.commands)) {
+							if (is_relative(commands, b.commands) || b.mimicry_time > 0) {
 								index = commands[(index + 4) % 64];//если родственник
 							}else {
 								index = commands[(index + 3) % 64];//если враг
@@ -251,12 +248,12 @@ public class Bot{
 				}else {
 					index = commands[(index + 1) % 64];//если граница
 				}
-			}else if (command == 34 || command == 50) {//отдать ресурсы относительно
+			}else if (command == 34 | command == 50) {//отдать ресурсы относительно
 				give(commands[(index + 1) % 64] % 8);
 				index += 2;
 				index %= 64;
 				break;
-			}else if (command == 35 || command == 52) {//отдать ресурсы абсолютно
+			}else if (command == 35 | command == 52) {//отдать ресурсы абсолютно
 				give(rotate);
 				index += 1;
 				index %= 64;
@@ -275,7 +272,7 @@ public class Bot{
 				}else {
 					index = commands[(index + 3) % 64];
 				}
-			}else if (command == 38) {//преобразовать минералы в энергию
+			}else if (command == 38 || command == 0) {//преобразовать минералы в энергию
 				if (minerals > 0) {
 					c_blue++;
 				}
@@ -309,15 +306,15 @@ public class Bot{
 				index %= 64;
 				break;
 			}else if (command == 43) {//какая моя позиция x
-				double ind = commands[(index + 1) % 64] / 63.0;
-				if (xpos * 1.0 / world_scale[0] >= ind) {
+				double ind = commands[(index + 1) % 64] / 64.0;
+				if (xpos * world_scale[0] >= ind) {
 					index = commands[(index + 2) % 64];
 				}else {
 					index = commands[(index + 3) % 64];
 				}
 			}else if (command == 44) {//какая моя позиция y
-				double ind = commands[(index + 1) % 64] / 63.0;
-				if (ypos * 1.0 / world_scale[1] >= ind) {
+				double ind = commands[(index + 1) % 64] / 64.0;
+				if (ypos * world_scale[1] >= ind) {
 					index = commands[(index + 2) % 64];
 				}else {
 					index = commands[(index + 3) % 64];
@@ -341,8 +338,103 @@ public class Bot{
 				break;
 			}else if (command == 48) {//безусловный переход
 				index = commands[(index + 1) % 64];
+			}else if (command == 49) {//сколько энергии у соседа
+				int[] pos = get_rotate_position(rotate);
+				if (pos[1] > 0 & pos[1] < world_scale[1]) {
+					if (map[pos[0]][pos[1]] != null) {
+						Bot b = map[pos[0]][pos[1]];
+						if (b != null) {
+							int ind = commands[(index + 1) % 64] * 15;
+							if (b.energy >= ind) {
+								index = commands[(index + 2) % 64];
+							}else {
+								index = commands[(index + 3) % 64];
+							}
+						}
+					}else {
+						index = commands[(index + 4) % 64];
+					}
+				}else {
+					index = commands[(index + 4) % 64];
+				}
+			}else if (command == 51) {//сколько минералов у соседа
+				int[] pos = get_rotate_position(rotate);
+				if (pos[1] > 0 & pos[1] < world_scale[1]) {
+					if (map[pos[0]][pos[1]] != null) {
+						Bot b = map[pos[0]][pos[1]];
+						if (b != null) {
+							int ind = commands[(index + 1) % 64] * 15;
+							if (b.minerals >= ind) {
+								index = commands[(index + 2) % 64];
+							}else {
+								index = commands[(index + 3) % 64];
+							}
+						}
+					}else {
+						index = commands[(index + 4) % 64];
+					}
+				}else {
+					index = commands[(index + 4) % 64];
+				}
+			}else if (command == 53) {//какой возраст соседа
+				int[] pos = get_rotate_position(rotate);
+				if (pos[1] > 0 & pos[1] < world_scale[1]) {
+					if (map[pos[0]][pos[1]] != null) {
+						Bot b = map[pos[0]][pos[1]];
+						if (b != null) {
+							int ind = commands[(index + 1) % 64] * 15;
+							if (b.age >= ind) {
+								index = commands[(index + 2) % 64];
+							}else {
+								index = commands[(index + 3) % 64];
+							}
+						}
+					}else {
+						index = commands[(index + 4) % 64];
+					}
+				}else {
+					index = commands[(index + 4) % 64];
+				}
+			}else if (command == 54) {//мутация
+				color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
+				commands[rand.nextInt(64)] = rand.nextInt(64);
+				index += 1;
+				index %= 64;
+				break;
+			}else if (command == 55) {//мутация соседа
+				int[] pos = get_rotate_position(rotate);
+				if (pos[1] > 0 & pos[1] < world_scale[1]) {
+					if (map[pos[0]][pos[1]] != null) {
+						if (map[pos[0]][pos[1]].state == 0) {
+							Bot b = map[pos[0]][pos[1]];
+							if (b != null) {
+								b.color = new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256));
+								b.commands[rand.nextInt(64)] = rand.nextInt(64);
+							}
+						}
+					}
+				}
+				index += 1;
+				index %= 64;
+				break;
+			}else if (command == 56) {//отнять у соседа часть энергии относительно
+				attack2(commands[(index + 1) % 64] % 8, commands[(index + 1) % 64] * 2);
+				index += 3;
+				index %= 64;
+				break;
+			}else if (command == 57) {//отнять у соседа часть энергии абсолютно
+				attack2(rotate, commands[(index + 1) % 64] * 2);
+				index += 2;
+				index %= 64;
+				break;
+			}else if (command == 58) {//мимикрия
+				energy -= 20;
+				mimicry_time = 3;
+				index += 1;
+				index %= 64;
+				break;
 			}else {
-				index += commands[index];
+				index += command;
 				index %= 64;
 			}
 		}
