@@ -26,7 +26,7 @@ public class World extends JPanel{
 	int delay = 1;//минимальная задержка между кадрами
 	Random rand = new Random();//генератор случайных чисел
 	//int[] world_scale = {324, 216};
-	int[] world_scale = {162, 108};//размер мира
+	int[] world_scale = {324, 216};//размер мира
 	Bot[][] Map = new Bot[world_scale[0]][world_scale[1]];//карта со ссылками на объекты, находящиеся в ней
 	int[][] org_map = new int[world_scale[0]][world_scale[1]];//карта органики
 	int W = 1920;//размер экрана
@@ -277,7 +277,7 @@ public class World extends JPanel{
 					int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
 					if (gray > 0) {
 						canvas.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
-						canvas.fillRect(x * 10, y * 10, 10, 10);
+						canvas.fillRect(x * 5, y * 5, 5, 5);
 					}
 				}
 			}

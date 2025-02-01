@@ -12,7 +12,7 @@ public class Main{
 		new File("record/color").mkdirs();
 		new File("record/clans").mkdirs();
 		//
-		new File("saved objects").mkdirs();
+		new File("saved objects").mkdirs(); 
 		new File("saved worlds").mkdirs();
 		//запуск программы
 		JFrame frame = new JFrame("Cyber biology 2 v2.0");

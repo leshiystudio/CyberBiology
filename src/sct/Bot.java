@@ -41,8 +41,8 @@ public class Bot{
 	private int[] minerals_list = {1, 2, 3, 4};//сколько бот получит минералов
 	private int[] photo_list = {13, 10, 8, 6, 5, 4};//сколько бот получит энергии от фотосинтеза
 	//private int[] world_scale = {324, 216};
-	private int[] world_scale = {162, 108};//размер мира
-	private int predators_draw_type = 0;//вариант режима отрисовки хищников
+	private int[] world_scale = {324, 216};//размер мира
+	private int predators_draw_type = 1;//вариант режима отрисовки хищников
 	public int c_red;//красный в режиме отрисовки хищников
 	public int c_green;//зеленый в режиме отрисовки хищников
 	public int c_blue;//синий в режиме отрисовки хищников
@@ -55,8 +55,8 @@ public class Bot{
 	public Bot(int new_xpos, int new_ypos, Color new_color, int new_energy, Bot[][] new_map, int[][] new_org_map, ArrayList<Bot> new_objects) {//некоторые данные передаются в конструктор
 		xpos = new_xpos;
 		ypos = new_ypos;
-		x = new_xpos * 10;
-		y = new_ypos * 10;
+		x = new_xpos * 5;
+		y = new_ypos * 5;
 		color = new_color;
 		energy = new_energy;
 		objects = new_objects;
@@ -77,8 +77,8 @@ public class Bot{
 	}
 	public void Draw(Graphics canvas, int draw_type) {
 		if (state == 0) {//рисуем бота
-			canvas.setColor(new Color(0, 0, 0));//черное окаймление
-			canvas.fillRect(x, y, 10, 10);
+			//canvas.setColor(new Color(0, 0, 0));//черное окаймление
+			//canvas.fillRect(x, y, 10, 10);
 			if (draw_type == 0) {//режим отрисовки хищников
 				if (predators_draw_type == 0 || predators_draw_type == 2) {
 					int r = 0;
@@ -120,54 +120,49 @@ public class Bot{
 			}else if (draw_type == 4) {//возраста
 				canvas.setColor(new Color((int)(age / 1500.0 * 255.0), (int)(age / 1500.0 * 255.0), 255 - (int)(age / 1500.0 * 255.0)));
 			}else if (draw_type == 5) {//памяти
-				try {
-					canvas.setColor(new Color(0, 255 - memory * 4, memory * 4));
-				}catch (java.lang.IllegalArgumentException ex){
-					System.out.println(memory);
-				}
+				int m = border(memory, 63, 0);
+				canvas.setColor(new Color(0, 255 - m * 4, m * 4));
 			}else if (draw_type == 6) {//кланов
 				canvas.setColor(starting_color);
 			}else if (draw_type == 7) {//
 				//
 			}
-			//canvas.fillRect(x, y, 5, 5);
-			canvas.fillRect(x + 1, y + 1, 8, 8);
+			canvas.fillRect(x, y, 5, 5);
+			//canvas.fillRect(x + 1, y + 1, 8, 8);
 			//рисование связей между ботами
-			if (next != null || prev != null) {//если бот в цепоке, рисуем на нем квадрат
-				canvas.setColor(new Color(0, 0, 0));
-				canvas.fillRect(x + 3, y + 3, 4, 4);
-			}
-			if (next != null) {//если есть следующий
-				if (Math.abs(xpos - next.xpos) > 1) {//если расстояние между ботами больше 1(если они по разные стороны мира)
-					int xpos_ = 0;
-					if (xpos - next.xpos > 0) {//если я справа
-						xpos_= next.xpos + 162;
-					}else if (xpos - next.xpos < 0) {//если я слева
-						xpos_= next.xpos - 162;
-					}
-					canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5 + (xpos - xpos_) * 5, next.ypos * 10 + 5 + (ypos - next.ypos) * 5);
-				}else {//иначе просто рисовать цепочку
-					canvas.drawLine(x + 5, y + 5, next.xpos * 10 + 5, next.ypos * 10 + 5);
-				}
-			}
-			if (prev != null) {//если есть предыдущий
-				if (Math.abs(xpos - prev.xpos) > 1) {//если расстояние между ботами больше 1(если они по разные стороны мира)
-					int xpos_ = 0;
-					if (xpos - prev.xpos > 0) {//если я справа
-						xpos_= prev.xpos + 162;
-					}else if (xpos - prev.xpos < 0) {//если я слева
-						xpos_= prev.xpos - 162;
-					}
-					canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5 + (xpos - xpos_) * 5, prev.ypos * 10 + 5 + (ypos - prev.ypos) * 5);
-				}else {//иначе просто рисовать цепочку
-					canvas.drawLine(x + 5, y + 5, prev.xpos * 10 + 5, prev.ypos * 10 + 5);
-				}
-			}
+			//if (next != null || prev != null) {//если бот в цепоке, рисуем на нем квадрат
+			//	canvas.setColor(new Color(0, 0, 0));
+			//	canvas.fillRect(x + 3, y + 3, 4, 4);
+			//}
+			//if (next != null) {//если есть следующий
+			//	if (Math.abs(xpos - next.xpos) > 1) {//если расстояние между ботами больше 1(если они по разные стороны мира)
+			//		int xpos_ = 0;
+			//		if (xpos - next.xpos > 0) {//если я справа
+			//			xpos_= next.xpos + 162;
+			//		}else if (xpos - next.xpos < 0) {//если я слева
+			//			xpos_= next.xpos - 162;
+			//		}
+			//		canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5 + (xpos - xpos_) * 5, next.ypos * 10 + 5 + (ypos - next.ypos) * 5);
+			//	}else {//иначе просто рисовать цепочку
+			//		canvas.drawLine(x + 5, y + 5, next.xpos * 10 + 5, next.ypos * 10 + 5);
+			//	}
+			//}
+			//if (prev != null) {//если есть предыдущий
+			//	if (Math.abs(xpos - prev.xpos) > 1) {//если расстояние между ботами больше 1(если они по разные стороны мира)
+			//		int xpos_ = 0;
+			//		if (xpos - prev.xpos > 0) {//если я справа
+			//			xpos_= prev.xpos + 162;
+			//		}else if (xpos - prev.xpos < 0) {//если я слева
+			//			xpos_= prev.xpos - 162;
+			//		}
+			//		canvas.drawLine(x + 5, y + 5, xpos_ * 10 + 5 + (xpos - xpos_) * 5, prev.ypos * 10 + 5 + (ypos - prev.ypos) * 5);
+			//	}else {//иначе просто рисовать цепочку
+			//		canvas.drawLine(x + 5, y + 5, prev.xpos * 10 + 5, prev.ypos * 10 + 5);
+			//	}
+			//}
 		}else {//рисуем органику
-			//canvas.setColor(new Color(90, 90, 90));
-			//canvas.fillRect(x + 1, y + 1, 3, 3);
-			canvas.setColor(new Color(0, 0, 0));//черное окаймление
-			canvas.fillRect(x + 1, y + 1, 8, 8);
+			//canvas.setColor(new Color(0, 0, 0));//черное окаймление
+			//canvas.fillRect(x + 1, y + 1, 8, 8);
 			if (draw_type == 2) {//в режиме отрисовки энергии у органики отображается количество энергии
 				int g = 255 - (int)(energy / 1000.0 * 255.0);
 				if (g > 255) {
@@ -177,9 +172,11 @@ public class Bot{
 				}
 				canvas.setColor(new Color(255, g, 0));
 			}else{//во всех остальных случаях она просто серая
-				canvas.setColor(new Color(128, 128, 128));
+				//canvas.setColor(new Color(128, 128, 128));
+				canvas.setColor(new Color(128, 60, 0));
 			}
-			canvas.fillRect(x + 2, y + 2, 6, 6);
+			//canvas.fillRect(x + 2, y + 2, 6, 6);
+			canvas.fillRect(x + 1, y + 1, 3, 3);
 		}
 	}
 	public int Update(ListIterator<Bot> iterator, int steps) {//обновление бота
@@ -918,8 +915,8 @@ public class Bot{
 				map[xpos][ypos] = null;//сбросить текущую позицию
 				xpos = pos[0];//ставим новую позицию
 				ypos = pos[1];
-				x = xpos * 10;
-				y = ypos * 10;
+				x = xpos * 5;
+				y = ypos * 5;
 				map[xpos][ypos] = self;//поставить себя в карту
 				return(true);//успешно
 			}
@@ -1092,9 +1089,9 @@ public class Bot{
 				c_green = 0;
 				c_blue = 0;
 			}else {
-				c_red = border(c_red + 25, 255, 0);
-				c_green = border(c_green - 25, 255, 0);
-				c_blue = border(c_blue - 25, 255, 0);
+				c_red = border(c_red + 3, 255, 0);
+				c_green = border(c_green - 3, 255, 0);
+				c_blue = border(c_blue - 3, 255, 0);
 			}
 		}else if (predators_draw_type == 2) {
 			c_red += en;
@@ -1109,9 +1106,9 @@ public class Bot{
 				c_green = 255;
 				c_blue = 0;
 			}else {
-				c_red = border(c_red - 25, 255, 0);
-				c_green = border(c_green + 25, 255, 0);
-				c_blue = border(c_blue - 25, 255, 0);
+				c_red = border(c_red - 3, 255, 0);
+				c_green = border(c_green + 3, 255, 0);
+				c_blue = border(c_blue - 3, 255, 0);
 			}
 		}else if (predators_draw_type == 2) {
 			c_green += en;
@@ -1126,9 +1123,9 @@ public class Bot{
 				c_green = 0;
 				c_blue = 255;
 			}else {
-				c_red = border(c_red - 25, 255, 0);
-				c_green = border(c_green - 25, 255, 0);
-				c_blue = border(c_blue + 25, 255, 0);
+				c_red = border(c_red - 3, 255, 0);
+				c_green = border(c_green - 3, 255, 0);
+				c_blue = border(c_blue + 3, 255, 0);
 			}
 		}else if (predators_draw_type == 2) {
 			c_blue += en;
@@ -1143,9 +1140,9 @@ public class Bot{
 				c_green = 255;
 				c_blue = 0;
 			}else {
-				c_red = border(c_red + 25, 255, 0);
-				c_green = border(c_green + 25, 255, 0);
-				c_blue = border(c_blue - 25, 255, 0);
+				c_red = border(c_red + 3, 255, 0);
+				c_green = border(c_green + 3, 255, 0);
+				c_blue = border(c_blue - 3, 255, 0);
 			}
 		}else if (predators_draw_type == 2) {
 			c_yellow += en;
