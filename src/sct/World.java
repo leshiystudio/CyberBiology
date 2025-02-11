@@ -79,6 +79,7 @@ public class World extends JPanel{
 	JButton other_button;
 	JButton close_draw_types_button;
 	JButton clans_button;
+	JButton chain_button;
 	//
 	private int[][] movelist = {//куда ходить(для диффузии)
 		{0, -1},
@@ -134,6 +135,10 @@ public class World extends JPanel{
 		clans_button = new JButton("Clans");
 		clans_button.addActionListener(new change_draw_type(6));
 		clans_button.setBounds(W - 170, 40, 125, 20);
+		//кнопка режима отрисовки кланов
+		chain_button = new JButton("Chains");
+		chain_button.addActionListener(new change_draw_type(7));
+		chain_button.setBounds(W - 300, 65, 125, 20);
         //кнопка выбора бота
         select_button = new JButton("Select");
         select_button.addActionListener(new select());
@@ -272,31 +277,10 @@ public class World extends JPanel{
 		canvas.setColor(white);//залить мир белым
 		canvas.fillRect(0, 0, W - 300, 1080);
 		if (render) {//все, для чего нужна включенная отрисовка
-			for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
-				for (int y = 0; y < world_scale[1]; y++) {
-					int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
-					if (gray > 0) {
-						canvas.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
-						canvas.fillRect(x * 5, y * 5, 5, 5);
-					}
-				}
-			}
+			draw_org(canvas);//рисуем органику
 			for(Bot b: objects) {//рисуем ботов
 				b.Draw(canvas, draw_type);
 			}
-			//for (int x = 0; x < world_scale[0]; x++) {//для отладки
-			//	for (int y = 0; y < world_scale[1]; y++) {
-			//		if (Map[x][y] != null) {
-			//			if (Map[x][y].state == 0) {
-			//				canvas.setColor(green);
-			//				canvas.fillRect(x * 10, y * 10, 5, 5);
-			//			}else if (Map[x][y].state == 1){
-			//				canvas.setColor(red);
-			//				canvas.fillRect(x * 10, y * 10, 5, 5);
-			//			}
-			//		}
-			//	}
-			//}
 		}
 		if (menu == 0) {//рисовать основной интерфейс
 			canvas.setColor(black);//цвет шрифта
@@ -357,18 +341,10 @@ public class World extends JPanel{
 				//красное выделение
 				canvas.setColor(new Color(255, 0, 0));
 				if (selection.state == 0) {//у бота выделение больше, чем у органики
-					canvas.fillRect(selection.xpos * 10, selection.ypos * 10, 10, 10);
+					canvas.fillRect(selection.xpos * 5, selection.ypos * 5, 5, 5);
 				}else if (selection.state == 1) {
-					canvas.fillRect(1 + selection.xpos * 10, 1 + selection.ypos * 10, 8, 8);
+					canvas.fillRect(1 + selection.xpos * 5, 1 + selection.ypos * 5, 3, 3);
 				}
-				//if (selection.chain[0][0] != null) {//для отладки
-				//	canvas.setColor(new Color(255, 0, 255));
-				//	canvas.fillRect(selection.chain[0][0].xpos * 10, selection.chain[0][0].ypos * 10, 10, 10);
-				//}
-				//if (selection.chain[0][1] != null) {
-				//	canvas.setColor(new Color(255, 255, 0));
-				//	canvas.fillRect(selection.chain[0][1].xpos * 10, selection.chain[0][1].ypos * 10, 10, 10);
-				//}
 			}else {//если никто не выбран, пишем "none"
 				canvas.drawString("Selection: none", W - 300, 295);
 			}
@@ -398,80 +374,65 @@ public class World extends JPanel{
 				Graphics2D g2d = buff.createGraphics();
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
-				for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
-					for (int y = 0; y < world_scale[1]; y++) {
-						int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
-						if (gray > 0) {
-							g2d.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
-							g2d.fillRect(x * 10, y * 10, 10, 10);
-						}
-					}
-				}
+				draw_org(g2d);//рисуем органику
 				for(Bot b: objects) {
 					b.Draw(g2d, 0);
 				}
 				g2d.dispose();
+				//
 				//режим отрисовки энергии
 				BufferedImage buff2 = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
 				g2d = buff2.createGraphics();
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
-				for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
-					for (int y = 0; y < world_scale[1]; y++) {
-						int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
-						if (gray > 0) {
-							g2d.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
-							g2d.fillRect(x * 10, y * 10, 10, 10);
-						}
-					}
-				}
+				draw_org(g2d);//рисуем органику
 				for(Bot b: objects) {
 					b.Draw(g2d, 2);
 				}
 				g2d.dispose();
+				//
 				//режим отрисовки цвета
 				BufferedImage buff3 = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
 				g2d = buff3.createGraphics();
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
-				for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
-					for (int y = 0; y < world_scale[1]; y++) {
-						int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
-						if (gray > 0) {
-							g2d.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
-							g2d.fillRect(x * 10, y * 10, 10, 10);
-						}
-					}
-				}
+				draw_org(g2d);//рисуем органику
 				for(Bot b: objects) {
 					b.Draw(g2d, 1);
 				}
 				g2d.dispose();
+				//
 				//режим отрисовки кланов
 				BufferedImage buff4 = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
 				g2d = buff4.createGraphics();
 				g2d.setColor(Color.WHITE);
 				g2d.fillRect(0, 0, 1920, 1080);
-				for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
-					for (int y = 0; y < world_scale[1]; y++) {
-						int gray = (int)(org_map[x][y] / 1000.0 * 255.0);
-						if (gray > 0) {
-							g2d.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
-							g2d.fillRect(x * 10, y * 10, 10, 10);
-						}
-					}
-				}
+				draw_org(g2d);//рисуем органику
 				for(Bot b: objects) {
 					b.Draw(g2d, 6);
 				}
 				g2d.dispose();
+				//
 				//сохранение в файл
+				//
 				ImageIO.write(buff, "png", new File("record/predators/screen" + String.valueOf(steps / 25)+ ".png"));
 				ImageIO.write(buff2, "png", new File("record/energy/screen" + String.valueOf(steps / 25)+ ".png"));
 				ImageIO.write(buff3, "png", new File("record/color/screen" + String.valueOf(steps / 25)+ ".png"));
 				ImageIO.write(buff4, "png", new File("record/clans/screen" + String.valueOf(steps / 25)+ ".png"));
 			} catch (IOException e) {//если нет папок, то сделать ошибку
 				e.printStackTrace();
+			}
+		}
+	}
+	public void draw_org(Graphics canvas) {
+		for (int x = 0; x < world_scale[0]; x++) {//рисуем органику
+			for (int y = 0; y < world_scale[1]; y++) {
+				int gray = (int)(org_map[x][y] / 800.0 * 255.0);
+				if (gray > 255) {
+					gray = 255;
+				}
+				canvas.setColor(new Color(255 - gray, 255 - gray, 255 - gray));
+				canvas.fillRect(x * 5, y * 5, 5, 5);
 			}
 		}
 	}
@@ -512,8 +473,8 @@ public class World extends JPanel{
 	private class BotListener extends MouseAdapter implements ActionListener{//клик по экрану
 		public void mousePressed(MouseEvent e) {
 			if (e.getX() < W - 300) {//если нажали не на панель управления
-				botpos[0] = e.getX() / 10;//позиция клика(в клетках)
-				botpos[1] = e.getY() / 10;
+				botpos[0] = e.getX() / 5;//позиция клика(в клетках)
+				botpos[1] = e.getY() / 5;
 				if (mouse == 0) {//если режим выбора
 					if (Map[botpos[0]][botpos[1]] != null) {//если на карте есть бот
 						Bot b = Map[botpos[0]][botpos[1]];//выбрать бота
@@ -538,7 +499,7 @@ public class World extends JPanel{
 							Bot new_bot;//создать нового бота, задать ему мозг и запустить в мир
 							new_bot = new Bot(botpos[0], botpos[1], new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)), 1000, Map, org_map, objects);
 							new_bot.self = new_bot;
-							for (int i = 0; i < 64 + 18; i++) {//чтобы у разных установленных ботов мозги не ссылались на 1 объект
+							for (int i = 0; i < 64 + new_bot.interruptions_count; i++) {//чтобы у разных установленных ботов мозги не ссылались на 1 объект
 								new_bot.commands[i] = for_set[i];
 							}
 							objects.add(new_bot);
@@ -558,8 +519,8 @@ public class World extends JPanel{
 		}
 		public void mouseDragged(MouseEvent e) {//если мышка нажата и двигается
 			if (e.getX() < W - 300) {//если нажали не на панель управления
-				botpos[0] = e.getX() / 10;//позиция клика(в клетках)
-				botpos[1] = e.getY() / 10;
+				botpos[0] = e.getX() / 5;//позиция клика(в клетках)
+				botpos[1] = e.getY() / 5;
 				if (mouse == 1) {//если режим установки(выбирать так нельзя)
 					if (Map[botpos[0]][botpos[1]] == null) {//если место клика пустое
 						if (for_set != null) {//если есть мозг для установки
@@ -884,6 +845,7 @@ public class World extends JPanel{
 			add(memory_button);
 			add(clans_button);
 			add(close_draw_types_button);
+			add(chain_button);
 			menu = 1;
 		}
 	}
@@ -893,6 +855,7 @@ public class World extends JPanel{
 			remove(memory_button);
 			remove(clans_button);
 			remove(close_draw_types_button);
+			remove(chain_button);
 			menu = 0;
 		}
 	}

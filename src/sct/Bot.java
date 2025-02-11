@@ -20,7 +20,7 @@ public class Bot{
 	public int killed = 0;//убит ли бот?
 	public Bot[][] map;//ссылка на карту
 	public int[][] org_map;//сылка на карту органики
-	private int interruptions_count = 18;//количество прерываний
+	public int interruptions_count = 18;//количество прерываний
 	public int[] commands = new int[64 + interruptions_count];
 	public int index = 0;//индекс
 	public int age = 1500;//сколько осталось жить
@@ -124,15 +124,22 @@ public class Bot{
 				canvas.setColor(new Color(0, 255 - m * 4, m * 4));
 			}else if (draw_type == 6) {//кланов
 				canvas.setColor(starting_color);
-			}else if (draw_type == 7) {//
-				//
+			}else if (draw_type == 7) {//цепочек
+				if (next == null && prev == null) {
+					canvas.setColor(new Color(255, 255, 128));
+				}else if (next != null && prev != null) {
+					canvas.setColor(new Color(200, 0, 200));
+				}else {
+					canvas.setColor(new Color(85, 0, 85));
+				}
 			}
 			canvas.fillRect(x, y, 5, 5);
 			//canvas.fillRect(x + 1, y + 1, 8, 8);
 			//рисование связей между ботами
 			//if (next != null || prev != null) {//если бот в цепоке, рисуем на нем квадрат
 			//	canvas.setColor(new Color(0, 0, 0));
-			//	canvas.fillRect(x + 3, y + 3, 4, 4);
+			//	//canvas.fillRect(x + 3, y + 3, 4, 4);
+			//	canvas.fillRect(x + 1, y + 1, 3, 3);
 			//}
 			//if (next != null) {//если есть следующий
 			//	if (Math.abs(xpos - next.xpos) > 1) {//если расстояние между ботами больше 1(если они по разные стороны мира)
@@ -231,9 +238,7 @@ public class Bot{
 				}
 				if (steps % 3 == 0) {//каждые 3 хода органика тратит энергию
 					energy--;
-					if (org_map[xpos][ypos] < 1000) {
-						org_map[xpos][ypos]++;
-					}
+					org_map[xpos][ypos]++;
 				}
 				if (energy <= 0) {//если энергии нет, органика сгнила
 					killed = 1;
@@ -258,7 +263,11 @@ public class Bot{
 					minerals -= mnr;
 					int en = (int)(photo_list[sector] * (2 * (1 + mnr * 0.25) * (org_map[xpos][ypos] / 1000 * 2.65 + 0.35)));
 					energy += en;
-					go_green(en);//зеленеем
+					if (mnr == 0 || (mnr != 0 && minerals == 0)) {//если не усиливаем фотосинтез
+						go_green(en);//зеленеем
+					}else {
+						go_cyan(en);//зеленеем и синеем
+					}
 					if (mnr > 0) {
 						go_blue((int)(photo_list[sector] * (mnr * 0.25)));//синеем
 					}
@@ -679,11 +688,45 @@ public class Bot{
 				}
 				index += 3;
 				index %= 64;
+			}else if (command == 49) {//cколько соседей вокруг
+				int ind = commands[(index + 1) % 64] % 8;
+				int param = commands[(index + 2) % 64] % 3;
+				int c = count_of_neighbours(param);
+				if (c > ind) {
+					index = commands[(index + 3) % 64];
+				}else if (c < ind) {
+					index = commands[(index + 4) % 64];
+				}else {
+					index = commands[(index + 5) % 64];
+				}
 			}else {//безусловный переход
 				index += command;
 				index %= 64;
 			}
 		}
+	}
+	//функции команд генома
+	public int count_of_neighbours(int param) {//количество соседей
+		int c = 0;
+		for (int i = 0; i < 8; i++) {
+			int[] pos = get_rotate_position(i);
+			if (pos[1] >= 0 & pos[1] < world_scale[1]) {
+				if (map[pos[0]][pos[1]] != null) {
+					if (param == 0) {
+						c++;
+					}else if (param == 1) {
+						if (map[pos[0]][pos[1]].state == 0) {
+							c++;
+						}
+					}else if (param == 2) {
+						if (map[pos[0]][pos[1]].state == 1) {
+							c++;
+						}
+					}
+				}
+			}
+		}
+		return(c);
 	}
 	public int neighbour_param_bigger_than_my_param(int rot, int type) {//параметр соседа больше моего
 		int[] pos = get_rotate_position(rot);
@@ -715,7 +758,6 @@ public class Bot{
 		}
 		return(2);//недачно
 	}
-	//функции команд генома
 	public boolean neighbour_mutate(int rot) {//мутация соседа
 		int[] pos = get_rotate_position(rot);
 		if (pos[1] >= 0 & pos[1] < world_scale[1]) {
@@ -991,15 +1033,9 @@ public class Bot{
 			int[] pos = get_rotate_position(i);
 			if (pos[1] >= 0 & pos[1] < world_scale[1]) {//проверка на границы карты
 				org_map[pos[0]][pos[1]] += org;//добавляем органику в карту
-				if (org_map[pos[0]][pos[1]] >= 1000) {
-					org_map[pos[0]][pos[1]] = 1000;
-				}
 			}
 		}
 		org_map[xpos][ypos] += org;//добавляем органику под собой
-		if (org_map[xpos][ypos] >= 1000) {
-			org_map[xpos][ypos] = 1000;
-		}
 	}
 	public int get_rotate_from_genome(int ind) {//получение направления
 		int rot = commands[(ind + 1) % 64];//направление берется из параметра
@@ -1146,6 +1182,25 @@ public class Bot{
 			}
 		}else if (predators_draw_type == 2) {
 			c_yellow += en;
+		}
+	}
+	public void go_cyan(int en) {//синеть зеленеть
+		if (predators_draw_type == 0) {
+			c_blue++;
+			c_green++;
+		}else if (predators_draw_type == 1) {
+			if (c_red == 128 && c_green == 128 && c_blue == 128) {
+				c_red = 0;
+				c_green = 255;
+				c_blue = 255;
+			}else {
+				c_red = border(c_red - 3, 255, 0);
+				c_green = border(c_green + 3, 255, 0);
+				c_blue = border(c_blue + 3, 255, 0);
+			}
+		}else if (predators_draw_type == 2) {
+			c_blue += en;
+			c_green += en;
 		}
 	}
 	public boolean is_relative(Color color1, Color color2) {//являются ли боты родственниками(если все цветовые каналы 2 бота находятся в диапазоне от -20 до 20 относительно моего цвета)
